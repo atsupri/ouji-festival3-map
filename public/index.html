@@ -334,7 +334,13 @@
             <button style="width:100%; padding:12px; background:var(--primary); color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer;" onclick="closeWelcomeModal()">確認して閉じる</button>
         </div>
     </div>
-  
+  	<!-- 通知を促すワンクッションエリア -->
+<div id="notification-banner" style="background: #fff3cd; border: 1px solid #ffeeba; padding: 15px; margin: 10px; border-radius: 8px; text-align: center;">
+  <p style="margin: 0 0 10px 0; color: #856404; font-weight: bold;">📢 クラスの混雑状況やゲリライベントの通知を受け取ろう！</p>
+  <button id="enable-notification-btn" style="background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 5px; font-size: 16px; cursor: pointer;">
+    通知設定を開く
+  </button>
+</div>
     <div id="modal-all-shops" class="modal" onclick="closeModalOnOverlay(event, 'modal-all-shops')">
         <div class="modal-content" style="max-width: 450px;">
             <div class="modal-header">
@@ -901,5 +907,27 @@
         function closeModal(id) { document.getElementById(id).classList.remove('show'); }
         function closeModalOnOverlay(e, id) { if (e.target === document.getElementById(id)) closeModal(id); }
     </script>
+<script>
+  const banner = document.getElementById('notification-banner');
+  const btn = document.getElementById('enable-notification-btn');
+
+  // すでに許可されている場合は、案内エリアを非表示にする
+  if (Notification.permission === 'granted' || Notification.permission === 'denied') {
+    banner.style.display = 'none';
+  }
+
+  // ボタンを押したときの動き
+  btn.addEventListener('click', () => {
+    // スマホ・ブラウザに通知の許可を求める
+    Notification.requestPermission().then((permission) => {
+      if (permission === 'granted') {
+        alert('通知が許可されました！鮎祭り当日の案内をお楽しみに！');
+        banner.style.display = 'none'; // 許可されたら案内を消す
+      } else if (permission === 'denied') {
+        alert('通知が拒否されました。スマホの設定画面から通知をONにできます。');
+      }
+    });
+  });
+</script>
 </body>
 </html>
