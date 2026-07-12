@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>王子高 文化祭アプリ</title>
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    
+    <style>
+        :root {
+            --primary: #1e3a8a;
+            --primary-light: #eff6ff;
+            --accent: #f59e0b;
+            --text-main: #1f2937;
+            --text-sub: #6b7280;
+            --bg-light: #f9fafb;
+            --border: #e5e7eb;
+  
+            /* 🎨 ジャンル別・カラーテーマ */
+            --color-food-bg: #fef2f2;       /* 淡い赤 */
+            --color-food-border: #fca5a5;
+            --color-food-text: #b91c1c;
+            
+            --color-exhibit-bg: #f0fdf4;    /* 淡い緑 */
+            --color-exhibit-border: #86efac;
+            --color-exhibit-text: #166534;
+            
+            --color-play-bg: #fef9c3;       /* 淡い黄 */
+            --color-play-border: #fde047;
+            --color-play-text: #854d0e;
+        }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        body {
+            background-color: var(--bg-light);
+            color: var(--text-main);
+            overflow-x: hidden;
+            padding-top: 56px;
+            padding-bottom: 65px;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .app-main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .app-page {
+            display: none;
+            height: 100%;
+            flex-direction: column;
+        }
+        .app-page.active {
+            display: flex;
+        }
+        
+        #map-container {
+            height: 35vh;
+            width: 100%;
+            position: relative;
+            border-bottom: 1px solid var(--border);
+        }
+        #map {
+            width: 100%;
+            height: 100%;
+            background: #ffffff !important;
+            z-index: 1;
+        }
+        
+        .scrollable-content {
+            flex: 1;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+  
+        .alert-bar {
+            position: fixed;
+            top: 56px;
+            left: 0;
+            width: 100%;
+            background-color: #fef2f2;
+            border-bottom: 2px solid #fee2e2;
+            color: #991b1b;
+            padding: 10px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 999;
+            font-size: 0.85rem;
+            font-weight: bold;
+        }
+        .alert-content i { margin-right: 8px; color: #dc2626; }
+        .alert-close-btn { background: none; border: none; font-size: 1.2rem; color: #991b1b; cursor: pointer; }
+  
+        .app-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 56px;
+            background-color: var(--primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 16px;
+            z-index: 1000;
+        }
+        .app-title { font-size: 1.15rem; font-weight: bold; letter-spacing: 0.05em; cursor: pointer; user-select: none; }
+        .menu-toggle-btn { background: none; border: none; color: white; font-size: 1.25rem; cursor: pointer; width: 40px; height: 40px; }
+  
+        .menu-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 1001; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
+        .menu-overlay.show { opacity: 1; pointer-events: auto; }
+        .app-sidebar { position: fixed; top: 0; left: -300px; width: 300px; height: 100%; background: white; z-index: 1002; transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 4px 0 10px rgba(0,0,0,0.1); padding: 20px; display: flex; flex-direction: column; overflow-y: auto; }
+        .app-sidebar.open { left: 0; }
+        .sidebar-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 12px; margin-bottom: 12px; }
+        .sidebar-header h2 { font-size: 1.05rem; color: var(--primary); }
+        .sidebar-close-btn { background: none; border: none; font-size: 1.5rem; color: var(--text-sub); cursor: pointer; }
+  
+        .sidebar-search-section { border-bottom: 1px solid var(--border); padding-bottom: 12px; margin-bottom: 10px; }
+        .search-bar-wrapper { position: relative; }
+        .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-sub); font-size: 0.9rem; }
+        #sidebar-search-box { width: 100%; padding: 10px 12px 10px 36px; border: 1px solid var(--border); border-radius: 8px; font-size: 0.85rem; background: #f3f4f6; outline: none; }
+        
+        .sidebar-results-list { max-height: 200px; overflow-y: auto; margin-top: 8px; display: flex; flex-direction: column; gap: 4px; }
+        .sidebar-result-item { background: #f9fafb; border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px; cursor: pointer; text-align: left; }
+        .sidebar-result-item.genre-food { background: var(--color-food-bg); border-color: var(--color-food-border); }
+        .sidebar-result-item.genre-exhibit { background: var(--color-exhibit-bg); border-color: var(--color-exhibit-border); }
+        .sidebar-result-item.genre-play { background: var(--color-play-bg); border-color: var(--color-play-border); }
+        .sidebar-result-floor { font-size: 0.65rem; font-weight: bold; background: rgba(255,255,255,0.8); border: 1px solid rgba(0,0,0,0.1); padding: 2px 4px; border-radius: 3px; margin-right: 6px; }
+        .sidebar-result-title { font-size: 0.8rem; font-weight: bold; color: var(--text-main); }
+  
+        .sidebar-nav button { width: 100%; background: none; border: none; text-align: left; padding: 10px 12px; font-size: 0.9rem; font-weight: 500; display: flex; align-items: center; gap: 12px; border-radius: 6px; cursor: pointer; color: var(--text-main); margin-bottom: 4px; }
+        .sidebar-nav button:active { background: var(--primary-light); color: var(--primary); }
+        .sidebar-divider { font-size: 0.75rem; font-weight: bold; color: var(--text-sub); margin: 14px 0 6px 4px; }
+        .sidebar-sub-text { font-size: 0.75rem; color: var(--text-sub); margin: 0 0 6px 4px; font-weight: bold; }
+  
+        .leaflet-top.leaflet-left { top: 10px !important; }
+  
+        .leaflet-popup-content-wrapper { border-radius: 8px !important; padding: 2px 4px !important; }
+        .popup-location { font-size: 0.65rem; font-weight: bold; color: var(--text-sub); }
+        .popup-title { font-size: 0.8rem; font-weight: bold; color: var(--text-main); margin-bottom: 4px; }
+  
+        /* 📍 ピンの透明度設定 */
+        .custom-pin-icon { display: flex; align-items: center; justify-content: center; }
+        .pin-dot { width: 16px; height: 16px; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.2); border: 2px solid white; transition: all 0.2s ease; opacity: 0.55; } /* 👀 通常時は文字が見えやすいよう半透明 */
+        
+        .pin-dot.pin-food { background: #fca5a5; border-color: #ef4444; }
+        .pin-dot.pin-exhibit { background: #86efac; border-color: #22c55e; }
+        .pin-dot.pin-dot-play { background: #fde047; border-color: #eab308; }
+        
+        /* ✨ 選択されたピン：完全に不透明化、かつ拡大 */
+        .pin-dot.selected {
+            opacity: 1.0 !important;
+            transform: scale(2.0);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+            border-width: 1.5px;
+            z-index: 9999 !important;
+        }
+  
+        .pin-square { width: 22px; height: 22px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; background: white; border: 2px solid #3b82f6; box-shadow: 0 2px 4px rgba(0,0,0,0.2); opacity: 0.6; }
+        .pin-square.selected { opacity: 1.0 !important; transform: scale(1.3); }
+  
+        .sticky-map-controls { position: sticky; top: 0; z-index: 998; background: white; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        
+        /* 📱 横スクロール操作性の向上（タッチ領域の確保とバグ修正） */
+        .tab-container { display: flex; padding: 6px; gap: 6px; overflow-x: auto; -webkit-overflow-scrolling: touch; touch-action: pan-x; }
+        .tab-btn { flex: 1; flex-shrink: 0; min-width: 75px; border: none; background: #f3f4f6; padding: 10px 0; font-size: 0.85rem; font-weight: bold; border-radius: 6px; color: var(--text-sub); cursor: pointer; }
+        .tab-btn.active { background: var(--primary); color: white; }
+        
+        .filter-section { padding: 12px 16px 4px; background: white; }
+        .tag-container { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 8px; -webkit-overflow-scrolling: touch; touch-action: pan-x; -ms-overflow-style: none; scrollbar-width: none; }
+        .tag-container::-webkit-scrollbar { display: none; }
+        .tag-btn { flex-shrink: 0; border: 1px solid var(--border); background: white; padding: 8px 14px; font-size: 0.75rem; font-weight: bold; border-radius: 20px; cursor: pointer; color: var(--text-main); -webkit-user-select: none; user-select: none; }
+        .tag-btn.active-all { background: var(--primary-light); color: var(--primary); border-color: var(--primary); }
+        .tag-btn.active-food { background: var(--color-food-bg); color: var(--color-food-text); border-color: var(--color-food-text); }
+        .tag-btn.active-exhibit { background: var(--color-exhibit-bg); color: var(--color-exhibit-text); border-color: var(--color-exhibit-text); }
+        .tag-btn.active-play { background: var(--color-play-bg); color: var(--color-play-text); border-color: var(--color-play-text); }
+  
+        .section-title { font-size: 0.95rem; font-weight: bold; padding: 14px 16px 6px; color: var(--text-sub); border-bottom: 2px solid var(--border); margin: 0 16px 10px; padding-left: 0; }
+        .shop-list { padding: 0 16px 16px; }
+        
+        .shop-card-wrapper { border: 1px solid var(--border); border-radius: 10px; margin-bottom: 8px; overflow: hidden; background: white; }
+        .shop-card-wrapper.genre-food { background: var(--color-food-bg); border-color: var(--color-food-border); }
+        .shop-card-wrapper.genre-exhibit { background: var(--color-exhibit-bg); border-color: var(--color-exhibit-border); }
+        .shop-card-wrapper.genre-play { background: var(--color-play-bg); border-color: var(--color-play-border); }
+        
+        .shop-card { padding: 14px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; }
+        .shop-loc { background: rgba(255,255,255,0.8); border: 1px solid rgba(0,0,0,0.1); color: var(--text-main); font-size: 0.75rem; font-weight: bold; padding: 3px 6px; border-radius: 4px; margin-right: 12px; }
+        .shop-title { flex: 1; font-weight: bold; font-size: 0.9rem; display: flex; flex-direction: column; gap: 2px; color: var(--text-main); }
+        .shop-genre { font-size: 0.75rem; color: var(--text-sub); margin-top: 1px; }
+        
+        /* 🖼️ 店舗詳細のレイアウト微調整 */
+        .shop-details { display: none; padding: 0 14px 14px; border-top: 1px dashed var(--border); background: rgba(255,255,255,0.5); grid-template-columns: 85px 1fr; gap: 12px; padding-top: 14px; }
+        .shop-details.open { display: grid; }
+        .logo-dummy { width: 85px; height: 85px; background: #e5e7eb; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 0.65rem; color: #9ca3af; overflow: hidden; border: 1px solid #d1d5db; }
+        .logo-dummy img { width: 100%; height: 100%; object-fit: cover; }
+        
+        .map-go-btn { background: var(--primary); color: white; border: none; padding: 8px 12px; font-size: 0.75rem; font-weight: bold; border-radius: 4px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+        .map-go-btn i { color: white !important; font-size: 0.85rem; }
+  
+        .day-selector { display: flex; background: white; border-bottom: 1px solid var(--border); padding: 8px 16px; gap: 8px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        .day-btn { flex: 1; flex-shrink: 0; min-width: 140px; border: 1px solid var(--border); background: white; padding: 8px 0; font-size: 0.85rem; font-weight: bold; border-radius: 6px; cursor: pointer; }
+        .day-btn.active { background: #374151; color: white; }
+        .timeline-wrapper { padding: 20px 16px; }
+        .time-slot { background: white; border: 1px solid var(--border); border-left: 4px solid var(--primary); padding: 14px; border-radius: 0 8px 8px 0; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+        .time-slot.status-delayed { border-left-color: #eab308; background: #fffbeb; }
+        .time-text { font-size: 0.75rem; font-weight: bold; color: var(--text-sub); }
+        .band-name { font-weight: bold; font-size: 0.95rem; }
+        .band-status { font-size: 0.75rem; font-weight: bold; color: #10b981; }
+        .band-status.delayed { color: #b45309; }
+        .fav-btn { background: none; border: none; font-size: 1.35rem; color: #d1d5db; cursor: pointer; }
+        .fav-btn.active { color: #f59e0b; }
+  
+        .app-footer { position: fixed; bottom: 0; left: 0; width: 100%; height: 60px; background: white; border-top: 1px solid var(--border); display: flex; z-index: 1000; }
+        .page-tab-btn { flex: 1; background: none; border: none; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-sub); font-size: 0.7rem; }
+        .page-tab-btn i { font-size: 1.2rem; margin-bottom: 4px; }
+        .page-tab-btn.active { color: var(--primary); font-weight: bold; }
+  
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 20px; opacity: 0; pointer-events: none; transition: opacity 0.2s ease; }
+        .modal.show { opacity: 1; pointer-events: auto; }
+        .modal-content { background: white; border-radius: 12px; width: 100%; max-width: 400px; max-height: 80%; display: flex; flex-direction: column; padding: 20px; overflow-y: auto; }
+        .modal-header { padding-bottom: 12px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        
+        .greeting-card { background: #f8fafc; border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-bottom: 12px; }
+        .greeting-title { font-size: 0.85rem; font-weight: bold; color: var(--primary); margin-bottom: 4px; }
+        .greeting-text { font-size: 0.8rem; line-height: 1.5; color: var(--text-main); white-space: pre-wrap; }
+        .guide-box { background: #f3f4f6; border-radius: 6px; padding: 10px; font-size: 0.8rem; line-height: 1.4; color: var(--text-main); margin-top: 8px; }
+  
+        .admin-panel label { font-weight: bold; display: block; margin-top: 10px; font-size: 0.9rem; }
+        .admin-panel select, .admin-panel text-area, .admin-panel input { width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #d1d5db; margin-top: 5px; font-size: 0.85rem; }
+        .admin-buttons { display: flex; flex-direction: column; gap: 8px; margin-top: 15px; }
+        .admin-btn { border: none; padding: 10px; border-radius: 6px; font-weight: bold; color: white; cursor: pointer; }
+        .admin-btn.delay { background: #eab308; }
+        .admin-btn.reset { background: #10b981; }
+        .admin-btn.sync { background: #4b5563; }
+    </style>
+</head>
+<body>
+  
+    <div id="global-alert" class="alert-bar" style="display: none;">
+        <div class="alert-content">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            <span id="alert-message">ステージ進行に遅れが出ています。</span>
+        </div>
+        <button class="alert-close-btn" onclick="closeAlertBar()">&times;</button>
+    </div>
+  
+    <header class="app-header">
+        <button class="menu-toggle-btn" onclick="toggleSidebar()">
+            <i class="fa-solid fa-bars"></i>
+        </button>
+        <h1 class="app-title" onclick="handleAdminKnock()">王子高 文化祭案内</h1>
+        <div style="width: 40px;"></div>
+    </header>
+  
+    <div id="menu-overlay" class="menu-overlay" onclick="toggleSidebar()"></div>
+    <aside id="sidebar" class="app-sidebar">
+        <div class="sidebar-header">
+            <h2>メニュー & 全館検索</h2>
+            <button class="sidebar-close-btn" onclick="toggleSidebar()">&times;</button>
+        </div>
+        <div class="sidebar-search-section">
+            <div class="search-bar-wrapper">
+                <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                <input type="text" id="sidebar-search-box" placeholder="全階層からお店を検索..." oninput="filterSidebarShops()">
+            </div>
+            <div id="sidebar-search-results" class="sidebar-results-list"></div>
+        </div>
+        
+        <nav class="sidebar-nav">
+            <button onclick="openModal('modal-all-shops')" style="background: var(--primary-light); color: var(--primary); font-weight: bold; margin-bottom: 10px;">
+                <i class="fa-solid fa-list-ul"></i> すべての店舗一覧を見る
+            </button>
+            <div class="sidebar-divider">メニュー</div>
+            <button onclick="openModal('modal-greeting')"><i class="fa-solid fa-face-smile"></i> ご挨拶</button>
+            <button onclick="openModal('modal-rules')"><i class="fa-solid fa-circle-exclamation"></i> お知らせとお願い</button>
+            <button onclick="openModal('modal-push')"><i class="fa-solid fa-bell"></i> スマホ通知設定</button>
+        </nav>
+    </aside>
+  
+    <main class="app-main">
+        <section id="map-page" class="app-page active">
+            <div id="map-container">
+                <div id="map"></div>
+            </div>
+            
+            <div class="scrollable-content">
+                <div class="sticky-map-controls">
+                    <div id="floor-tab-container" class="tab-container"></div>
+                </div>
+                
+                <div class="filter-section">
+                    <div class="tag-container">
+                        <button id="tag-all" class="tag-btn active-all" onclick="filterTag('すべて', this)">全て</button>
+                        <button id="tag-food" class="tag-btn" onclick="filterTag('食品販売', this)">🍴 食品販売</button>
+                        <button id="tag-exhibit" class="tag-btn" onclick="filterTag('展示・部活', this)">🎨 展示・部活</button>
+                        <button id="tag-play" class="tag-btn" onclick="filterTag('体験・催し', this)">🎮 体験・催し</button>
+                    </div>
+                </div>
+                <h3 id="floor-title" class="section-title">1Fの出店一覧</h3>
+                <div id="shop-list-container" class="shop-list"></div>
+            </div>
+        </section>
+  
+        <section id="timeline-page" class="app-page">
+            <div id="day-tab-container" class="day-selector"></div>
+            <div class="scrollable-content" style="padding-top:10px;">
+                <div id="timeline-container" class="timeline-wrapper" style="padding:0 16px;"></div>
+            </div>
+        </section>
+    </main>
+  
+    <div id="modal-welcome-push" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>🔔 通知設定のお願い</h3>
+            </div>
+            <p style="font-size: 0.85rem; line-height: 1.5; margin-bottom: 12px;">
+                王子高文化祭アプリへようこそ！<br>
+                ステージの急なタイムテーブル変更や遅延情報などの重大ニュースを画面でお知らせするために、通知設定を有効にしてください。
+            </p>
+            <button style="width:100%; padding:12px; background:var(--primary); color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer;" onclick="closeWelcomeModal()">確認して閉じる</button>
+        </div>
+    </div>
+  
+    <div id="modal-all-shops" class="modal" onclick="closeModalOnOverlay(event, 'modal-all-shops')">
+        <div class="modal-content" style="max-width: 450px;">
+            <div class="modal-header">
+                <h3>🏬 全階層の店舗一覧</h3>
+                <button onclick="closeModal('modal-all-shops')">&times;</button>
+            </div>
+            <div id="all-shops-modal-container" style="overflow-y: auto; display: flex; flex-direction: column; gap: 8px;"></div>
+        </div>
+    </div>
+  
+    <div id="modal-greeting" class="modal" onclick="closeModalOnOverlay(event, 'modal-greeting')">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>👨‍🏫 ご挨拶</h3>
+                <button onclick="closeModal('modal-greeting')">&times;</button>
+            </div>
+            <div class="greeting-card">
+                <div class="greeting-title">👨‍🏫 校長先生からのご挨拶</div>
+                <div class="greeting-text">王子高校の文化祭へようこそ！日頃の学習成果や部活動の集大成をぜひお楽しみください。</div>
+            </div>
+        </div>
+    </div>
+  
+    <div id="modal-rules" class="modal" onclick="closeModalOnOverlay(event, 'modal-rules')">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>📌 お知らせとお願い</h3>
+                <button onclick="closeModal('modal-rules')">&times;</button>
+            </div>
+            <ul id="notice-list-container" style="list-style: none; font-size: 0.9rem;"></ul>
+        </div>
+    </div>
+  
+    <div id="modal-sync-alert" class="modal" onclick="closeModalOnOverlay(event, 'modal-sync-alert')">
+        <div class="modal-content" style="border:2px solid var(--accent);">
+            <div class="modal-header">
+                <h3 style="color:var(--accent);"><i class="fa-solid fa-triangle-exclamation"></i> 【遅延速報】</h3>
+                <button onclick="closeModal('modal-sync-alert')">&times;</button>
+            </div>
+            <p id="sync-alert-text" style="font-size:0.95rem; font-weight:bold; line-height:1.6; padding:10px 0; text-align:center;"></p>
+            <button style="width:100%; padding:10px; background:var(--text-main); color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer;" onclick="closeModal('modal-sync-alert')">確認しました</button>
+        </div>
+    </div>
+  
+    <div id="modal-push" class="modal" onclick="closeModalOnOverlay(event, 'modal-push')">
+        <div class="modal-content">
+            <div class="modal-header"><h3>🔔 プッシュ通知設定</h3><button onclick="closeModal('modal-push')">&times;</button></div>
+            <div class="guide-box" style="margin-bottom:12px;">※サーバーなし環境のため、別端末へのテスト配信はメニューの「王子高 文化祭案内」を5回連打して開く同期機能をご利用ください。</div>
+            <button style="width:100%; padding:12px; background:var(--primary); color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer;" onclick="alert('アプリ内通知をONにしました！')">通知システムをONにする</button>
+        </div>
+    </div>
+  
+    <!-- 🛠️ 管理者コントロールパネル（他端末同期機能を追加） -->
+    <div id="modal-admin" class="modal" onclick="closeModalOnOverlay(event, 'modal-admin')">
+        <div class="modal-content admin-panel">
+            <div class="modal-header">
+                <h3>🛠️ 管理者コントロールパネル</h3>
+                <button onclick="closeModal('modal-admin')">&times;</button>
+            </div>
+            <label for="admin-target-select">遅延対象イベント:</label>
+            <select id="admin-target-select"></select>
+            <div class="admin-buttons">
+                <button class="admin-btn delay" onclick="triggerDelayNotification(15)">📢 15分遅延をブロードキャスト</button>
+                <button class="admin-btn delay" onclick="triggerDelayNotification(30)">📢 30分遅延をブロードキャスト</button>
+                <button class="admin-btn reset" onclick="triggerDelayNotification(0)">✅ 通常進行に戻す</button>
+            </div>
+            
+            <hr style="margin:20px 0; border:0; border-top:1px solid var(--border);">
+            <div style="background:#f3f4f6; padding:10px; border-radius:8px;">
+                <span style="font-size:0.8rem; font-weight:bold; color:var(--text-main);">📲 他の端末へ通知テストデータを送る</span>
+                <p style="font-size:0.7rem; color:var(--text-sub); margin-top:2px;">PCで配信した後にこの「コピー」を押し、スマホ側のこの枠に貼り付けて「同期」を押すと通知が再現されます。</p>
+                <input type="text" id="admin-sync-code" placeholder="同期コードがここにでます" onclick="this.select()">
+                <button class="admin-btn sync" style="width:100%; margin-top:6px; padding:6px; font-size:0.75rem;" onclick="copySyncCode()">📋 コードをクリップボードにコピー</button>
+                <button class="admin-btn reset" style="width:100%; margin-top:6px; padding:6px; font-size:0.75rem; background:#2563eb;" onclick="applySyncCode()">📥 貼り付けたコードで手動同期する</button>
+            </div>
+        </div>
+    </div>
+  
+    <footer class="app-footer">
+        <button class="page-tab-btn active" onclick="switchPage('map-page')"><i class="fa-solid fa-map-location-dot"></i><span>校内マップ</span></button>
+        <button class="page-tab-btn" onclick="switchPage('timeline-page')"><i class="fa-solid fa-clock"></i><span>タイムライン</span></button>
+    </footer>
+  
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <script>
+        // ==========================================
+        // 🎨 【データ定義エリア】
+        // ==========================================
+        const MAP_IMAGES = {
+            '1F': 'map1f.png',
+            '2F': 'map2f.png',
+            '3F': 'map3f.png',
+            '4F': 'map4f.png'
+        };
+  
+        /* 💡 喫茶 美和の館に image: 'class-2-7.png' をセットしました */
+        const shopData = [
+            { id: 1, floor: '1F', location: '新棟', title: '3-7：ポップコーン・わたあめ', genre: '食品販売', x: 103, y: 378, image: '', menu: 'なんと1クラスで二個も催しちゃってます！\nぜひ来てね！' },
+            { id: 2, floor: '2F', location: 'A棟', title: '2-7：喫茶 美和の館', genre: '食品販売', x: 410, y: 460, image: 'class-2-7.png', menu: '美味しいワッフルと飲み物を用意してお待ちしております！' },
+            { id: 3, floor: '1F', location: '新棟', title: '3-2：人形浄瑠璃部', genre: '展示・部活', x: 359, y: 460, image: '', menu: '伝統ある人形浄瑠璃 of 公演と人形展示中。' },
+            { id: 4, floor: '1F', location: '新棟', title: '商業科', genre: '展示・部活', x: 199, y: 347, image: '', menu: '商品開発や企業とのコラボレーションで作った作品の展示会です！' },
+            { id: 5, floor: '4F', location: 'A棟', title: '軽音楽部', genre: '体験・催し', x: 284, y: 474, image: '', menu: '軽音楽部元気はつらつにライブ中！！！きて！！！！！！！！' },
+            { id: 6, floor: '1F', location: '体育館', title: '体育館イベント', genre: '展示・部活', x: 808, y: 263, image: '', menu: 'ステージ発表や各部活のメインパフォーマンスを行います！' },
+            { id: 7, floor: '1F', location: '新棟', title: 'マーケティング部', genre: '展示・部活', x: 103, y: 300, image: '', menu: '企業＆王子高校によって生まれたパンを販売中！！' }
+        ];
+  
+        const facilityData = [
+            { name: "事務室・AED",floor: "1F", x: 200, y: 200, icon: "🚑" },
+            { name: "2F トイレ", floor: "2F", x: 610, y: 545, icon: "🚻" }
+        ];
+  
+        let timelineData = [
+            { id: 1, day: 1, time: "10:00 - 11:00", name: "吹奏楽部：オープニング", delay: 0 },
+            { id: 2, day: 1, time: "11:30 - 13:00", name: "軽音楽部：無敵ライブ", delay: 0 },
+            { id: 3, day: 2, time: "13:00 - 14:00", name: "ダンス部：ファイナル", delay: 0 }
+        ];
+  
+        const noticeData = [
+            { title: "🔥 熱中症にご注意ください", sub: "こまめな水分補給をお願いします。" }
+        ];
+  
+        const ADMIN_PASSWORD = "ouji"; 
+  
+        // ==========================================
+        // ⚙️ 【システムロジックエリア】
+        // ==========================================
+        let currentFloor = '1F';
+        let currentDay = 1;
+        let selectedTag = 'すべて';
+        let map;
+        let currentImageLayer = null;
+        let markersGroup = [];
+        let markerObjectsMap = {}; 
+        let activeSelectedPin = null; 
+        let favorites = JSON.parse(localStorage.getItem('festival_favs')) || [];
+        let adminKnockCount = 0;
+        let adminKnockTimeout;
+  
+        const MAP_WIDTH = 1000;
+        const MAP_HEIGHT = 800;
+  
+        window.onload = function() {
+            buildFloorTabs();
+            buildDayTabs();
+            initImageMap();
+            renderShops();
+            renderTimeline();
+            initAdminSelect();
+            buildAllShopsModalList();
+            checkFirstAccessWelcome(); 
+            updateSyncCodeDisplay();
+            
+            document.getElementById('notice-list-container').innerHTML = noticeData.map(d => `<li class="greeting-card"><b>${d.title}</b><span style="display:block;color:var(--text-sub);font-size:0.8rem;margin-top:4px;">${d.sub}</span></li>`).join('');
+            
+            setInterval(syncCloudAndCheckAlert, 2000);
+            syncCloudAndCheckAlert(); 
+        };
+
+        function buildFloorTabs() {
+            const defaultFloors = ['1F', '2F', '3F', '4F'];
+            const dataFloors = shopData.map(s => s.floor);
+            const allFloors = Array.from(new Set([...defaultFloors, ...dataFloors])).sort();
+            
+            const container = document.getElementById('floor-tab-container');
+            container.innerHTML = allFloors.map(f => {
+                const activeClass = f === currentFloor ? 'active' : '';
+                const label = f.endsWith('F') ? f.replace('F', '階') : f;
+                return `<button class="tab-btn ${activeClass}" data-floor="${f}" onclick="switchFloor('${f}')">${label}</button>`;
+            }).join('');
+            
+            const displayTitle = currentFloor.endsWith('F') ? currentFloor.replace('F', '階') : currentFloor;
+            document.getElementById('floor-title').innerText = `${displayTitle}の出店一覧`;
+        }
+
+        function buildDayTabs() {
+            const days = Array.from(new Set(timelineData.map(t => t.day))).sort((a,b) => a-b);
+            const container = document.getElementById('day-tab-container');
+            container.innerHTML = days.map(d => {
+                const activeClass = d === currentDay ? 'active' : '';
+                return `<button id="day${d}-btn" class="day-btn ${activeClass}" onclick="switchDay(${d})">${d}日目</button>`;
+            }).join('');
+        }
+  
+        style = document.createElement('style');
+        style.innerHTML = '.leaflet-popup-content { margin: 8px 12px !important; }';
+        document.head.appendChild(style);
+
+        function initImageMap() {
+            if (map) { map.remove(); }
+            map = L.map('map', {
+                crs: L.CRS.Simple,
+                minZoom: -1.5, 
+                maxZoom: 1,
+                maxBounds: [[0, 0], [MAP_HEIGHT, MAP_WIDTH]],
+                maxBoundsViscosity: 1.0,
+                attributionControl: false,
+                zoomSnap: 0.1
+            });
+            updateMapFloorImage();
+            map.on('click', function() { resetActivePinStyle(); });
+        }
+  
+        function updateMapFloorImage() {
+            if (currentImageLayer) { map.removeLayer(currentImageLayer); }
+            const imageUrl = MAP_IMAGES[currentFloor] || 'map1f.png';
+  
+            currentImageLayer = L.imageOverlay(imageUrl, [[0, 0], [MAP_HEIGHT, MAP_WIDTH]]).addTo(map);
+            map.setView([MAP_HEIGHT / 2, MAP_WIDTH / 2], -0.4); 
+            updateMapMarkers();
+        }
+  
+        function switchPage(pageId) {
+            document.querySelectorAll('.app-page').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.page-tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(pageId).classList.add('active');
+            event.currentTarget.classList.add('active');
+            if(pageId === 'map-page' && map) {
+                setTimeout(() => { map.invalidateSize(); map.setView([MAP_HEIGHT / 2, MAP_WIDTH / 2], -0.4); }, 200);
+            }
+        }
+  
+        function switchFloor(floor) {
+            currentFloor = floor;
+            const container = document.getElementById('floor-tab-container');
+            container.querySelectorAll('.tab-btn').forEach(b => {
+                b.classList.toggle('active', b.getAttribute('data-floor') === floor);
+            });
+            
+            const displayTitle = floor.endsWith('F') ? floor.replace('F', '階') : floor;
+            document.getElementById('floor-title').innerText = `${displayTitle}の出店一覧`;
+            resetActivePinStyle();
+            renderShops();
+            updateMapFloorImage();
+        }
+  
+        function switchDay(day) {
+            currentDay = day;
+            const container = document.getElementById('day-tab-container');
+            container.querySelectorAll('.day-btn').forEach(b => {
+                const onclickStr = b.getAttribute('onclick') || '';
+                b.classList.toggle('active', onclickStr.includes(`(${day})`));
+            });
+            renderTimeline();
+        }
+  
+        function updateMapMarkers() {
+            markersGroup.forEach(m => map.removeLayer(m));
+            markersGroup = [];
+            markerObjectsMap = {};
+  
+            shopData.filter(s => s.floor === currentFloor).forEach(shop => {
+                let pinColorClass = "pin-exhibit";
+                if (shop.genre === '食品販売') pinColorClass = "pin-food";
+                else if (shop.genre === '体験・催し') pinColorClass = "pin-dot-play";
+  
+                const customIcon = L.divIcon({
+                    html: `<div class="pin-dot ${pinColorClass}" id="marker-dot-${shop.id}"></div>`,
+                    className: 'custom-pin-icon',
+                    iconSize: [16, 16],
+                    iconAnchor: [8, 8]
+                });
+  
+                const popupContent = `
+                    <div class="popup-location">${shop.location}</div>
+                    <div class="popup-title">${shop.title}</div>
+                `;
+  
+                const marker = L.marker([shop.y, shop.x], {icon: customIcon}).addTo(map).bindPopup(popupContent, { maxWidth: 150, minWidth: 120, autoPan: false });
+                
+                marker.on('click', function() {
+                    highlightPin(shop.id);
+                    openShopDetailFromMap(shop.id);
+                });
+  
+                markersGroup.push(marker);
+                markerObjectsMap[shop.id] = marker;
+            });
+  
+            facilityData.filter(f => f.floor === currentFloor).forEach(facility => {
+                const customIcon = L.divIcon({
+                    html: `<div class="pin-square" id="facility-pin-${facility.name}">${facility.icon}</div>`,
+                    className: 'custom-pin-icon',
+                    iconSize: [24, 24],
+                    iconAnchor: [12, 12]
+                });
+                const marker = L.marker([facility.y, facility.x], {icon: customIcon}).addTo(map).bindPopup(`<b>${facility.name}</b>`, { autoPan: false });
+                markersGroup.push(marker);
+            });
+        }
+  
+        function highlightPin(shopId) {
+            resetActivePinStyle();
+            const dotEl = document.getElementById(`marker-dot-${shopId}`);
+            if (dotEl) {
+                dotEl.classList.add('selected');
+                activeSelectedPin = dotEl;
+            }
+        }
+  
+        function resetActivePinStyle() {
+            if (activeSelectedPin) {
+                activeSelectedPin.classList.remove('selected');
+                activeSelectedPin = null;
+            }
+        }
+  
+        function openShopDetailFromMap(shopId) {
+            document.querySelectorAll('.shop-details').forEach(d => d.classList.remove('open'));
+            const detailDiv = document.getElementById(`details-${shopId}`);
+            if (detailDiv) {
+                detailDiv.classList.add('open');
+                detailDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+  
+        /* 🖼️ 修正ポイント：imageデータがある場合は正しく<img>タグを出し、ない場合はNO IMAGEを出す構造 */
+        function renderShops() {
+            const container = document.getElementById('shop-list-container');
+            container.innerHTML = '';
+            const filtered = shopData.filter(shop => shop.floor === currentFloor && (selectedTag === 'すべて' || shop.genre === selectedTag));
+  
+            if(filtered.length === 0) {
+                container.innerHTML = '<p style="text-align:center; color:#9ca3af; font-weight:bold; padding:20px;">このフロアには該当する出店がありません</p>';
+                return;
+            }
+  
+            filtered.forEach(shop => {
+                let genreClass = "genre-exhibit";
+                let badgeEmoji = "🎨";
+                if(shop.genre === '食品販売') { genreClass = "genre-food"; badgeEmoji = "🍴"; }
+                else if(shop.genre === '体験・催し') { genreClass = "genre-play"; badgeEmoji = "🎮"; }
+  
+                // 画像判定ロジック
+                const imageHtml = shop.image ? `<img src="${shop.image}" alt="${shop.title}">` : 'NO IMAGE';
+  
+                const card = document.createElement('div');
+                card.className = `shop-card-wrapper ${genreClass}`;
+                card.innerHTML = `
+                    <div class="shop-card" onclick="toggleAccordion(${shop.id})">
+                        <span class="shop-loc">${shop.location}</span>
+                        <div class="shop-title">${shop.title}<span class="shop-genre">${badgeEmoji} ${shop.genre}</span></div>
+                        <i class="fa-solid fa-chevron-down" style="color:#9ca3af;"></i>
+                    </div>
+                    <div class="shop-details" id="details-${shop.id}">
+                        <div class="logo-dummy">${imageHtml}</div>
+                        <div>
+                            <span style="font-size:0.75rem; font-weight:bold; color:var(--primary);">📋 メニュー</span>
+                            <div style="font-size:0.8rem; margin-bottom:8px; color:var(--text-main); white-space: pre-wrap;">${shop.menu}</div>
+                            <button class="map-go-btn" onclick="panToCoordinates(${shop.x}, ${shop.y}, ${shop.id}, '${shop.floor}')"><i class="fa-solid fa-map"></i> マップ上で選択</button>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+  
+        function panToCoordinates(x, y, shopId, targetFloor) {
+            if (currentFloor !== targetFloor) { 
+                switchFloor(targetFloor); 
+            }
+            setTimeout(() => { 
+                map.setView([y, x], -0.2);
+                highlightPin(shopId);
+                if (markerObjectsMap[shopId]) {
+                    markerObjectsMap[shopId].openPopup();
+                }
+            }, 300);
+            
+            const scrollArea = document.querySelector('.scrollable-content');
+            if (scrollArea) scrollArea.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+  
+        function toggleAccordion(id) {
+            const detail = document.getElementById(`details-${id}`);
+            detail.classList.toggle('open');
+        }
+  
+        function filterTag(tag, element) {
+            selectedTag = tag;
+            document.querySelectorAll('.tag-btn').forEach(b => b.className = "tag-btn");
+            if(tag === 'すべて') element.classList.add('active-all');
+            else if(tag === '食品販売') element.classList.add('active-food');
+            else if(tag === '展示・部活') element.classList.add('active-exhibit');
+            else if(tag === '体験・催し') element.classList.add('active-play');
+            renderShops();
+        }
+  
+        function filterSidebarShops() {
+            const query = document.getElementById('sidebar-search-box').value.trim();
+            const resultsContainer = document.getElementById('sidebar-search-results');
+            resultsContainer.innerHTML = '';
+            if (query === '') return;
+  
+            shopData.filter(shop => shop.title.includes(query) || shop.menu.includes(query)).forEach(shop => {
+                let genreClass = "genre-exhibit";
+                if(shop.genre === '食品販売') genreClass = "genre-food";
+                else if(shop.genre === '体験・催し') genreClass = "genre-play";
+  
+                const item = document.createElement('button');
+                item.className = `sidebar-result-item ${genreClass}`;
+                item.onclick = () => { toggleSidebar(); panToCoordinates(shop.x, shop.y, shop.id, shop.floor); };
+                item.innerHTML = `<div><span class="sidebar-result-floor">${shop.floor}</span><span class="sidebar-result-title">${shop.title}</span></div>`;
+                resultsContainer.appendChild(item);
+            });
+        }
+  
+        function buildAllShopsModalList() {
+            const container = document.getElementById('all-shops-modal-container');
+            container.innerHTML = '';
+            const order = { '食品販売': 1, '展示・部活': 2, '体験・催し': 3 };
+            const sortedShops = [...shopData].sort((a, b) => order[a.genre] - order[b.genre]);
+  
+            sortedShops.forEach(shop => {
+                let genreClass = "genre-exhibit";
+                let badgeEmoji = "🎨";
+                if(shop.genre === '食品販売') { genreClass = "genre-food"; badgeEmoji = "🍴"; }
+                else if(shop.genre === '体験・催し') { genreClass = "genre-play"; badgeEmoji = "🎮"; }
+  
+                const btn = document.createElement('button');
+                btn.className = `sidebar-result-item ${genreClass}`;
+                btn.style.width = "100%"; btn.style.display = "block"; btn.style.marginBottom = "4px";
+                btn.onclick = () => { closeModal('modal-all-shops'); panToCoordinates(shop.x, shop.y, shop.id, shop.floor); };
+                btn.innerHTML = `
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <div><span class="sidebar-result-floor">${shop.floor}</span><span class="sidebar-result-title">${shop.title}</span></div>
+                        <span style="font-size:0.7rem; color:var(--text-sub); font-weight:bold;">${badgeEmoji} ${shop.genre}</span>
+                    </div>
+                `;
+                container.appendChild(btn);
+            });
+        }
+  
+        function renderTimeline() {
+            const container = document.getElementById('timeline-container');
+            container.innerHTML = '';
+            timelineData.filter(t => t.day === currentDay).forEach(slot => {
+                const isFav = favorites.includes(slot.id);
+                const isDelayed = slot.delay > 0;
+                const div = document.createElement('div');
+                div.className = `time-slot ${isDelayed ? 'status-delayed' : ''}`;
+                div.innerHTML = `
+                    <div>
+                        <span class="time-text">${slot.time}</span>
+                        <div class="band-name">${slot.name}</div>
+                        <span class="band-status ${isDelayed ? 'delayed' : ''}">${isDelayed ? `⚠️ ${slot.delay}分遅延中` : '✅ 通常通り'}</span>
+                    </div>
+                    <button class="fav-btn ${isFav ? 'active' : ''}" onclick="toggleFavorite(${slot.id})">★</button>
+                `;
+                container.appendChild(div);
+            });
+        }
+  
+        function toggleFavorite(id) {
+            if (favorites.includes(id)) { favorites = favorites.filter(fid => fid !== id); } 
+            else { favorites.push(id); }
+            localStorage.setItem('festival_favs', JSON.stringify(favorites));
+            renderTimeline();
+        }
+  
+        function handleAdminKnock() {
+            clearTimeout(adminKnockTimeout);
+            adminKnockCount++;
+            if (adminKnockCount >= 5) {
+                adminKnockCount = 0;
+                const pass = prompt("管理者パスワードを入力してください:");
+                if (pass === ADMIN_PASSWORD) {
+                    updateSyncCodeDisplay();
+                    openModal('modal-admin');
+                }
+                else if(pass !== null) alert("パスワードが違います。");
+            }
+            adminKnockTimeout = setTimeout(() => { adminKnockCount = 0; }, 2000);
+        }
+  
+        function checkFirstAccessWelcome() {
+            const hasSeen = localStorage.getItem('festival_welcome_seen');
+            if (!hasSeen) {
+                setTimeout(() => {
+                    document.getElementById('modal-welcome-push').classList.add('show');
+                }, 800);
+            }
+        }
+        function closeWelcomeModal() {
+            localStorage.setItem('festival_welcome_seen', 'true');
+            closeModal('modal-welcome-push');
+        }
+  
+        function triggerDelayNotification(minutes) {
+            const targetName = document.getElementById('admin-target-select').value;
+            const broadcastPayload = { target: targetName, delay: minutes, timestamp: Date.now() };
+            localStorage.setItem('festival_live_broadcast', JSON.stringify(broadcastPayload));
+            updateSyncCodeDisplay();
+            alert(`【送信完了】${targetName}の${minutes}分遅延速報を内部保存しました。`);
+            syncCloudAndCheckAlert(); 
+        }
+  
+        /* 📲 クロスデバイス検証用の擬似コード生成 */
+        function updateSyncCodeDisplay() {
+            const raw = localStorage.getItem('festival_live_broadcast');
+            if (raw) {
+                // 簡易的なBase64変換をしてコード化
+                document.getElementById('admin-sync-code').value = btoa(unescape(encodeURIComponent(raw)));
+            }
+        }
+        function copySyncCode() {
+            const input = document.getElementById('admin-sync-code');
+            input.select();
+            input.setSelectionRange(0, 99999);
+            navigator.clipboard.writeText(input.value);
+            alert("同期用コードをコピーしました！別の端末に送って貼り付けてください。");
+        }
+        function applySyncCode() {
+            const val = document.getElementById('admin-sync-code').value.trim();
+            if(!val) return alert("コードが空欄です");
+            try {
+                const decoded = decodeURIComponent(escape(atob(val)));
+                JSON.parse(decoded); // 検証
+                localStorage.setItem('festival_live_broadcast', decoded);
+                alert("手動同期が完了しました！通知を反映します。");
+                closeModal('modal-admin');
+                syncCloudAndCheckAlert();
+            } catch(e) {
+                alert("無効な同期コードです。");
+            }
+        }
+  
+        function syncCloudAndCheckAlert() {
+            const raw = localStorage.getItem('festival_live_broadcast');
+            if (!raw) return;
+            const data = JSON.parse(raw);
+  
+            timelineData.forEach(slot => {
+                if (slot.name === data.target) {
+                    if (slot.delay !== data.delay) {
+                        slot.delay = data.delay;
+                        renderTimeline();
+                        
+                        const alertBar = document.getElementById('global-alert');
+                        document.getElementById('alert-message').innerText = data.delay > 0 ? `遅延発生: ${data.target} (${data.delay}分遅れ)` : "全ステージ通常通り";
+                        alertBar.style.display = 'flex';
+  
+                        const lastSeenPopupKey = `popup_seen_${data.target}_${data.delay}_${data.timestamp}`;
+                        if (!localStorage.getItem(lastSeenPopupKey)) {
+                            const msg = data.delay > 0 
+                                ? `【進行変更】\n「${data.target}」に、現在【${data.delay}分】の遅れが発生しています！` 
+                                : `【復旧連絡】\n遅延していた「${data.target}」は通常進行に戻りました。`;
+                            
+                            document.getElementById('sync-alert-text').innerText = msg;
+                            document.getElementById('modal-sync-alert').classList.add('show');
+                            localStorage.setItem(lastSeenPopupKey, 'true'); 
+                        }
+                    }
+                }
+            });
+        }
+  
+        function initAdminSelect() {
+            document.getElementById('admin-target-select').innerHTML = timelineData.map(t => `<option value="${t.name}">${t.name}</option>`).join('');
+        }
+        function closeAlertBar() { document.getElementById('global-alert').style.display = 'none'; }
+        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); document.getElementById('menu-overlay').classList.toggle('show'); }
+        function openModal(id) { toggleSidebar(); document.getElementById(id).classList.add('show'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+        function closeModalOnOverlay(e, id) { if (e.target === document.getElementById(id)) closeModal(id); }
+    </script>
+</body>
+</html>
