@@ -334,11 +334,13 @@
             <button style="width:100%; padding:12px; background:var(--primary); color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer;" onclick="closeWelcomeModal()">確認して閉じる</button>
         </div>
     </div>
-  	<!-- 通知を促すワンクッションエリア -->
-<div id="notification-banner" style="background: #fff3cd; border: 1px solid #ffeeba; padding: 15px; margin: 10px; border-radius: 8px; text-align: center;">
-  <p style="margin: 0 0 10px 0; color: #856404; font-weight: bold;">📢 クラスの混雑状況やゲリライベントの通知を受け取ろう！</p>
-  <button id="enable-notification-btn" style="background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 5px; font-size: 16px; cursor: pointer;">
-    通知設定を開く
+  	<!-- スマホ通知設定エリア -->
+<div id="notification-zone" style="background: #f8f9fa; border: 1px solid #dee2e6; padding: 20px; margin: 15px; border-radius: 10px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+  <p style="margin: 0 0 15px 0; color: #212529; font-size: 16px; line-height: 1.5; font-weight: 500;">
+    📢 通知をオンにすることで体育館ステージの遅延情報が届くようになります。
+  </p>
+  <button id="change-notification-btn" style="background: #28a745; color: white; border: none; padding: 12px 24px; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; width: 100%; max-width: 280px; transition: 0.2s;">
+    通知システムを変更する
   </button>
 </div>
     <div id="modal-all-shops" class="modal" onclick="closeModalOnOverlay(event, 'modal-all-shops')">
@@ -907,25 +909,29 @@
         function closeModal(id) { document.getElementById(id).classList.remove('show'); }
         function closeModalOnOverlay(e, id) { if (e.target === document.getElementById(id)) closeModal(id); }
     </script>
-<script>
-  const banner = document.getElementById('notification-banner');
-  const btn = document.getElementById('enable-notification-btn');
+	<script>
+  const notifyBtn = document.getElementById('change-notification-btn');
 
-  // すでに許可されている場合は、案内エリアを非表示にする
-  if (Notification.permission === 'granted' || Notification.permission === 'denied') {
-    banner.style.display = 'none';
-  }
+  // ボタンがクリックされたら、ブラウザ標準の「許可/ブロック」の選択肢を呼び出す
+  notifyBtn.addEventListener('click', () => {
+    
+    // ブラウザに通知機能があるかチェック
+    if (!('Notification' in window)) {
+      alert('お使いのブラウザは通知機能に対応していません。別のブラウザでお試しください。');
+      return;
+    }
 
-  // ボタンを押したときの動き
-  btn.addEventListener('click', () => {
-    // スマホ・ブラウザに通知の許可を求める
+    // ブラウザ標準の「許可・ブロック」ポップアップを強制起動！
     Notification.requestPermission().then((permission) => {
       if (permission === 'granted') {
-        alert('通知が許可されました！鮎祭り当日の案内をお楽しみに！');
-        banner.style.display = 'none'; // 許可されたら案内を消す
+        alert('ブラウザの設定で【許可】されました！ステージの遅延情報をお届けします。');
       } else if (permission === 'denied') {
-        alert('通知が拒否されました。スマホの設定画面から通知をONにできます。');
+        alert('ブラウザの設定で【ブロック】されました。通知を受け取るには、アドレスバーの鍵マークやベルマーク（設定）からブロックを解除してください。');
+      } else {
+        alert('通知設定が変更されませんでした。');
       }
+    }).catch((error) => {
+      console.error('通知のリクエスト中にエラーが発生しました:', error);
     });
   });
 </script>
