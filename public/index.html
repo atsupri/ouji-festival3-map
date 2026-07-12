@@ -540,14 +540,14 @@
         };
   
         const shopData = [
-            { id: 1, floor: '1F', location: '新棟', title: '3-7：ポップコーン・わたあめ', genre: '食品販売', x: 103, y: 378, menu: 'なんと1クラスで二個も催しちゃってます！\nぜひ来てね！' },
-            { id: 2, floor: '2F', location: 'A棟', title: '2-7：喫茶 美和の館', genre: '食品販売', x: 410, y: 460, menu: '美味しいワッフルと飲み物を用意してお待ちしております！' },
-            { id: 3, floor: '1F', location: '新棟', title: '3-2：人形浄瑠璃部', genre: '展示・部活', x: 359, y: 460, menu: '伝統ある人形浄瑠璃 of 公演と人形展示中。' },
-            { id: 4, floor: '1F', location: '新棟', title: '商業科', genre: '展示・部活', x: 199, y: 347, menu: '商品開発や企業とのコラボレーションで作った作品の展示会です！' },
-            { id: 5, floor: '4F', location: 'A棟', title: '軽音楽部', genre: '体験・催し', x: 284, y: 474, menu: '軽音楽部元気はつらつにライブ中！！！きて！！！！！！！！' },
-            { id: 6, floor: '1F', location: '体育館', title: '体育館イベント', genre: '展示・部活', x: 808, y: 263, menu: 'ステージ発表や各部活のメインパフォーマンスを行います！' },
-            { id: 7, floor: '1F', location: '新棟', title: 'マーケティング部', genre: '展示・部活', x: 103, y: 300, menu: '企業＆王子高校によって生まれたパンを販売中 !!' }
-        ];
+  	  { id: 1, floor: '1F', location: '新棟', title: '3-7：ポップコーン・わたあめ', genre: '食品販売', x: 103, y: 378, menu: 'なんと1クラスで二個も催しちゃってます！\nぜひ来てね！', image: 'default.png' },
+  	  { id: 2, floor: '2F', location: 'A棟', title: '2-7：喫茶 美和の館', genre: '食品販売', x: 410, y: 460, menu: '美味しいワッフルと飲み物を用意してお待ちしております！', image: 'class-2-7.png' }, // 👈 ここに画像を指定！
+ 	  { id: 3, floor: '1F', location: '新棟', title: '3-2：人形浄瑠璃部', genre: '展示・部活', x: 359, y: 460, menu: '伝統ある人形浄瑠璃 of 公演と人形展示中。', image: 'default.png' },
+   	  { id: 4, floor: '1F', location: '新棟', title: '商業科', genre: '展示・部活', x: 199, y: 347, menu: '商品開発や企業とのコラボレーションで作った作品の展示会です！', image: 'default.png' },
+   	  { id: 5, floor: '4F', location: 'A棟', title: '軽音楽部', genre: '体験・催し', x: 284, y: 474, menu: '軽音楽部元気はつらつにライブ中！！！きて！！！！！！！！', image: 'default.png' },
+   	  { id: 6, floor: '1F', location: '体育館', title: '体育館イベント', genre: '展示・部活', x: 808, y: 263, menu: 'ステージ発表や各部活のメインパフォーマンスを行います！', image: 'default.png' },
+	  { id: 7, floor: '1F', location: '新棟', title: 'マーケティング部', genre: '展示・部活', x: 103, y: 300, menu: '企業＆王子高校によって生まれたパンを販売中 !!', image: 'default.png' }
+	];
   
         const facilityData = [
             { name: "事務室・AED", floor: "1F", x: 200, y: 200, icon: "🚑" },
@@ -789,42 +789,47 @@
         }
   
         function renderShops() {
-            const container = document.getElementById('shop-list-container');
-            container.innerHTML = '';
-            const filtered = shopData.filter(shop => shop.floor === currentFloor && (selectedTag === 'すべて' || shop.genre === selectedTag));
-  
-            if(filtered.length === 0) {
-                container.innerHTML = '<p style="text-align:center; color:#9ca3af; font-weight:bold; padding:20px;">このフロアには該当する出店がありません</p>';
-                return;
-            }
-  
-            filtered.forEach(shop => {
-                let genreClass = "genre-exhibit";
-                let badgeEmoji = "🎨";
-                if(shop.genre === '食品販売') { genreClass = "genre-food"; badgeEmoji = "🍴"; }
-                else if(shop.genre === '体験・催し') { genreClass = "genre-play"; badgeEmoji = "🎮"; }
-  
-                const card = document.createElement('div');
-                card.className = `shop-card-wrapper ${genreClass}`;
-                card.innerHTML = `
-                    <div class="shop-card" onclick="toggleAccordion(${shop.id})">
-                        <span class="shop-loc">${shop.location}</span>
-                        <div class="shop-title">${shop.title}<span class="shop-genre">${badgeEmoji} ${shop.genre}</span></div>
-                        <i class="fa-solid fa-chevron-down" style="color:#9ca3af;"></i>
-                    </div>
-                    <div class="shop-details" id="details-${shop.id}">
-                        <!-- 画像ロゴダミー枠（CSS適用により長押し不可） -->
-                        <div class="logo-dummy">NO IMAGE</div>
-                        <div>
-                            <span style="font-size:0.75rem; font-weight:bold; color:var(--primary);">📋 メニュー</span>
-                            <div style="font-size:0.8rem; margin-bottom:8px; color:var(--text-main); white-space: pre-wrap;">${shop.menu}</div>
-                            <button class="map-go-btn" onclick="panToCoordinates(${shop.x}, ${shop.y}, ${shop.id}, '${shop.floor}')"><i class="fa-solid fa-map"></i> マップ上で選択</button>
-                        </div>
-                    </div>
-                `;
-                container.appendChild(card);
-            });
-        }
+    const container = document.getElementById('shop-list-container');
+    container.innerHTML = '';
+    const filtered = shopData.filter(shop => shop.floor === currentFloor && (selectedTag === 'すべて' || shop.genre === selectedTag));
+
+    if(filtered.length === 0) {
+        container.innerHTML = '<p style="text-align:center; color:#9ca3af; font-weight:bold; padding:20px;">このフロアには該当する出店がありません</p>';
+        return;
+    }
+
+    filtered.forEach(shop => {
+        let genreClass = "genre-exhibit";
+        let badgeEmoji = "🎨";
+        if(shop.genre === '食品販売') { genreClass = "genre-food"; badgeEmoji = "🍴"; }
+        else if(shop.genre === '体験・催し') { genreClass = "genre-play"; badgeEmoji = "🎮"; }
+
+        // 画像が設定されていない場合のフォールバック（予備）
+        const shopImg = shop.image ? shop.image : 'default.png';
+
+        const card = document.createElement('div');
+        card.className = `shop-card-wrapper ${genreClass}`;
+        card.innerHTML = `
+            <div class="shop-card" onclick="toggleAccordion(${shop.id})">
+                <span class="shop-loc">${shop.location}</span>
+                <div class="shop-title">${shop.title}<span class="shop-genre">${badgeEmoji} ${shop.genre}</span></div>
+                <i class="fa-solid fa-chevron-down" style="color:#9ca3af;"></i>
+            </div>
+            <div class="shop-details" id="details-${shop.id}">
+                <!-- 🖼️ 長押しダウンロード・ドラッグを禁止した安全な画像タグ -->
+                <div class="logo-dummy" style="padding:0; background:none;">
+                    <img src="${shopImg}" alt="logo" style="width:100%; height:100%; object-fit:cover; pointer-events:none; -webkit-touch-callout:none;" onerror="this.style.display='none'; this.parentElement.innerText='NO IMAGE';">
+                </div>
+                <div>
+                    <span style="font-size:0.75rem; font-weight:bold; color:var(--primary);">📋 メニュー</span>
+                    <div style="font-size:0.8rem; margin-bottom:8px; color:var(--text-main); white-space: pre-wrap;">${shop.menu}</div>
+                    <button class="map-go-btn" onclick="panToCoordinates(${shop.x}, ${shop.y}, ${shop.id}, '${shop.floor}')"><i class="fa-solid fa-map"></i> マップ上で選択</button>
+                </div>
+            </div>
+        `;
+        container.appendChild(card);
+    });
+}
   
         function panToCoordinates(x, y, shopId, targetFloor) {
             if (currentFloor !== targetFloor) { 
