@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>王子高 文化祭アプリ</title>
+    <title>厚木王子 文化祭案内サイト</title>
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <!-- FontAwesome -->
@@ -20,19 +20,19 @@
             --border: #e5e7eb;
   
             /* 🎨 ジャンル別・カラーテーマ */
-            --color-food-bg: #fef2f2;       /* 淡い赤 */
+            --color-food-bg: #fef2f2;
             --color-food-border: #fca5a5;
             --color-food-text: #b91c1c;
             
-            --color-exhibit-bg: #f0fdf4;    /* 淡い緑 */
+            --color-exhibit-bg: #f0fdf4;
             --color-exhibit-border: #86efac;
             --color-exhibit-text: #166534;
             
-            --color-play-bg: #fef9c3;       /* 淡い黄 */
+            --color-play-bg: #fef9c3;
             --color-play-border: #fde047;
             --color-play-text: #854d0e;
 
-            /* 📍 ピンの色（店舗一覧の丸マークと同期用） */
+            /* 📍 ピンの色 */
             --pin-food-color: #ef4444;
             --pin-exhibit-color: #22c55e;
             --pin-play-color: #eab308;
@@ -149,23 +149,19 @@
         .sidebar-nav button { width: 100%; background: none; border: none; text-align: left; padding: 10px 12px; font-size: 0.9rem; font-weight: 500; display: flex; align-items: center; gap: 12px; border-radius: 6px; cursor: pointer; color: var(--text-main); margin-bottom: 4px; }
         .sidebar-nav button:active { background: var(--primary-light); color: var(--primary); }
         .sidebar-divider { font-size: 0.75rem; font-weight: bold; color: var(--text-sub); margin: 14px 0 6px 4px; }
-        .sidebar-sub-text { font-size: 0.75rem; color: var(--text-sub); margin: 0 0 6px 4px; font-weight: bold; }
   
         .leaflet-top.leaflet-left { top: 10px !important; }
-  
         .leaflet-popup-content-wrapper { border-radius: 8px !important; padding: 2px 4px !important; }
         .popup-location { font-size: 0.65rem; font-weight: bold; color: var(--text-sub); }
         .popup-title { font-size: 0.8rem; font-weight: bold; color: var(--text-main); margin-bottom: 4px; }
   
-        /* 📍 ピンの透明度設定 */
         .custom-pin-icon { display: flex; align-items: center; justify-content: center; }
-        .pin-dot { width: 16px; height: 16px; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.2); border: 2px solid white; transition: all 0.2s ease; opacity: 0.55; } /* 👀 通常時は文字が見えやすいよう半透明 */
+        .pin-dot { width: 16px; height: 16px; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.2); border: 2px solid white; transition: all 0.2s ease; opacity: 0.55; }
         
         .pin-dot.pin-food { background: #fca5a5; border-color: var(--pin-food-color); }
         .pin-dot.pin-exhibit { background: #86efac; border-color: var(--pin-exhibit-color); }
         .pin-dot.pin-dot-play { background: #fde047; border-color: var(--pin-play-color); }
         
-        /* ✨ 選択されたピン：完全に不透明化、かつ拡大 */
         .pin-dot.selected {
             opacity: 1.0 !important;
             transform: scale(2.0);
@@ -179,15 +175,13 @@
   
         .sticky-map-controls { position: sticky; top: 0; z-index: 998; background: white; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         
-        /* 📱 横スクロール操作性の向上（タッチ領域の確保とバグ修正） */
         .tab-container { display: flex; padding: 6px; gap: 6px; overflow-x: auto; -webkit-overflow-scrolling: touch; touch-action: pan-x; }
         .tab-btn { flex: 1; flex-shrink: 0; min-width: 75px; border: none; background: #f3f4f6; padding: 10px 0; font-size: 0.85rem; font-weight: bold; border-radius: 6px; color: var(--text-sub); cursor: pointer; }
         .tab-btn.active { background: var(--primary); color: white; }
         
         .filter-section { padding: 12px 16px 4px; background: white; }
-        .tag-container { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 8px; -webkit-overflow-scrolling: touch; touch-action: pan-x; -ms-overflow-style: none; scrollbar-width: none; }
-        .tag-container::-webkit-scrollbar { display: none; }
-        .tag-btn { flex-shrink: 0; border: 1px solid var(--border); background: white; padding: 8px 14px; font-size: 0.75rem; font-weight: bold; border-radius: 20px; cursor: pointer; color: var(--text-main); -webkit-user-select: none; user-select: none; }
+        .tag-container { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 8px; -webkit-overflow-scrolling: touch; touch-action: pan-x; }
+        .tag-btn { flex-shrink: 0; border: 1px solid var(--border); background: white; padding: 8px 14px; font-size: 0.75rem; font-weight: bold; border-radius: 20px; cursor: pointer; color: var(--text-main); user-select: none; }
         .tag-btn.active-all { background: var(--primary-light); color: var(--primary); border-color: var(--primary); }
         .tag-btn.active-food { background: var(--color-food-bg); color: var(--color-food-text); border-color: var(--color-food-text); }
         .tag-btn.active-exhibit { background: var(--color-exhibit-bg); color: var(--color-exhibit-text); border-color: var(--color-exhibit-text); }
@@ -196,18 +190,9 @@
         .section-title { font-size: 0.95rem; font-weight: bold; padding: 14px 16px 6px; color: var(--text-sub); border-bottom: 2px solid var(--border); margin: 0 16px 10px; padding-left: 0; }
         .shop-list { padding: 0 16px 16px; }
         
-        /* 🎨 マップ下の店舗一覧：背景ノーマル（白）に統一 */
         .shop-card-wrapper { border: 1px solid var(--border); border-radius: 10px; margin-bottom: 8px; overflow: hidden; background: white; }
         
-        /* 📍 ジャンルの横に配置する丸マーク（●）のスタイル */
-        .genre-dot {
-            display: inline-block;
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            margin-right: 5px;
-            vertical-align: middle;
-        }
+        .genre-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 5px; vertical-align: middle; }
         .genre-dot.dot-food { background-color: var(--pin-food-color); }
         .genre-dot.dot-exhibit { background-color: var(--pin-exhibit-color); }
         .genre-dot.dot-play { background-color: var(--pin-play-color); }
@@ -217,11 +202,10 @@
         .shop-title { flex: 1; font-weight: bold; font-size: 0.9rem; display: flex; flex-direction: column; gap: 2px; color: var(--text-main); }
         .shop-genre { font-size: 0.75rem; color: var(--text-sub); margin-top: 1px; display: flex; align-items: center; }
         
-        /* 🖼️ 店舗詳細のレイアウト微調整 */
         .shop-details { display: none; padding: 0 14px 14px; border-top: 1px dashed var(--border); background: rgba(255,255,255,0.5); grid-template-columns: 85px 1fr; gap: 12px; padding-top: 14px; }
         .shop-details.open { display: grid; }
         .logo-dummy { width: 85px; height: 85px; background: #e5e7eb; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 0.65rem; color: #9ca3af; overflow: hidden; border: 1px solid #d1d5db; }
-        .logo-dummy img { width: 100%; height: 100%; object-fit: cover; pointer-events: none; -webkit-touch-callout: none; }
+        .logo-dummy img { width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
         
         .map-go-btn { background: var(--primary); color: white; border: none; padding: 8px 12px; font-size: 0.75rem; font-weight: bold; border-radius: 4px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
         .map-go-btn i { color: white !important; font-size: 0.85rem; }
@@ -230,13 +214,19 @@
         .day-btn { flex: 1; flex-shrink: 0; min-width: 140px; border: 1px solid var(--border); background: white; padding: 8px 0; font-size: 0.85rem; font-weight: bold; border-radius: 6px; cursor: pointer; }
         .day-btn.active { background: #374151; color: white; }
         .timeline-wrapper { padding: 20px 16px; }
+        
+        /* タイムラインカード */
         .time-slot { background: white; border: 1px solid var(--border); border-left: 4px solid var(--primary); padding: 14px; border-radius: 0 8px 8px 0; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
-        .time-slot.status-delayed { border-left-color: #eab308; background: #fffbeb; }
+        .time-slot.status-delayed { border-left-color: #dc2626; background: #fef2f2; }
+        .time-slot.status-chain-delayed { border-left-color: #eab308; background: #fffbeb; }
+        
         .time-text { font-size: 0.75rem; font-weight: bold; color: var(--text-sub); }
         .band-name { font-weight: bold; font-size: 0.95rem; }
         .band-status { font-size: 0.75rem; font-weight: bold; color: #10b981; }
-        .band-status.delayed { color: #b45309; }
-        .fav-btn { background: none; border: none; font-size: 1.35rem; color: #d1d5db; cursor: pointer; }
+        .band-status.delayed { color: #b91c1c; }
+        .band-status.chain-delayed { color: #b45309; }
+        
+        .fav-btn { background: none; border: none; font-size: 1.5rem; color: #d1d5db; cursor: pointer; padding: 4px 8px; }
         .fav-btn.active { color: #f59e0b; }
   
         .app-footer { position: fixed; bottom: 0; left: 0; width: 100%; height: 60px; background: white; border-top: 1px solid var(--border); display: flex; z-index: 1000; }
@@ -244,21 +234,30 @@
         .page-tab-btn i { font-size: 1.2rem; margin-bottom: 4px; }
         .page-tab-btn.active { color: var(--primary); font-weight: bold; }
   
+        /* 模範的なウェルカム通知デザイン */
         .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 20px; opacity: 0; pointer-events: none; transition: opacity 0.2s ease; }
         .modal.show { opacity: 1; pointer-events: auto; }
-        .modal-content { background: white; border-radius: 12px; width: 100%; max-width: 400px; max-height: 80%; display: flex; flex-direction: column; padding: 20px; overflow-y: auto; }
+        .modal-content { background: white; border-radius: 12px; width: 100%; max-width: 400px; max-height: 85%; display: flex; flex-direction: column; padding: 22px; overflow-y: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.15); }
         .modal-header { padding-bottom: 12px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .modal-header h3 { font-size: 1.1rem; color: var(--text-main); display: flex; align-items: center; gap: 8px; }
         
+        .welcome-highlight-box { background: var(--primary-light); border-radius: 8px; padding: 14px; border: 1px solid #bfdbfe; margin-bottom: 16px; text-align: center; }
+        .welcome-highlight-title { font-size: 0.95rem; font-weight: bold; color: var(--primary); margin-bottom: 6px; }
+        .welcome-highlight-desc { font-size: 0.8rem; line-height: 1.5; color: #1e40af; }
+        
+        .welcome-feature-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+        .welcome-feature-item { display: flex; align-items: flex-start; gap: 10px; font-size: 0.85rem; line-height: 1.4; color: var(--text-main); }
+        .welcome-feature-item i { color: #10b981; margin-top: 3px; }
+
         .greeting-card { background: #f8fafc; border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-bottom: 12px; }
         .greeting-title { font-size: 0.85rem; font-weight: bold; color: var(--primary); margin-bottom: 4px; }
         .greeting-text { font-size: 0.8rem; line-height: 1.5; color: var(--text-main); white-space: pre-wrap; }
-        .guide-box { background: #f3f4f6; border-radius: 6px; padding: 10px; font-size: 0.8rem; line-height: 1.4; color: var(--text-main); margin-top: 8px; }
   
         .admin-panel label { font-weight: bold; display: block; margin-top: 10px; font-size: 0.9rem; }
-        .admin-panel select, .admin-panel text-area, .admin-panel input { width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #d1d5db; margin-top: 5px; font-size: 0.85rem; }
+        .admin-panel select, .admin-panel input { width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #d1d5db; margin-top: 5px; font-size: 0.85rem; }
         .admin-buttons { display: flex; flex-direction: column; gap: 8px; margin-top: 15px; }
         .admin-btn { border: none; padding: 10px; border-radius: 6px; font-weight: bold; color: white; cursor: pointer; }
-        .admin-btn.delay { background: #eab308; }
+        .admin-btn.delay { background: #dc2626; }
         .admin-btn.reset { background: #10b981; }
         .admin-btn.sync { background: #4b5563; }
     </style>
@@ -268,7 +267,7 @@
     <div id="global-alert" class="alert-bar" style="display: none;">
         <div class="alert-content">
             <i class="fa-solid fa-triangle-exclamation"></i>
-            <span id="alert-message">ステージ進行に遅れが出ています。</span>
+            <span id="alert-message">お気に入りステージの遅延情報があります。</span>
         </div>
         <button class="alert-close-btn" onclick="closeAlertBar()">&times;</button>
     </div>
@@ -322,7 +321,7 @@
                         <button id="tag-all" class="tag-btn active-all" onclick="filterTag('すべて', this)">全て</button>
                         <button id="tag-food" class="tag-btn" onclick="filterTag('食品販売', this)">🍴 食品販売</button>
                         <button id="tag-exhibit" class="tag-btn" onclick="filterTag('展示・発表', this)">🎨 展示・発表</button>
-                        <button id="tag-play" class="tag-btn" onclick="filterTag('体験・アトラクション', this)">🎮 体験・アトラクション</button>
+                        <button id="tag-play" class="tag-btn" onclick="filterTag('体験・アトラクション', this)">🎮 体험・アトラクション</button>
                     </div>
                 </div>
                 <h3 id="floor-title" class="section-title">1Fの出店一覧</h3>
@@ -338,27 +337,33 @@
         </section>
     </main>
   
+    <!-- ✨ 新しくなった見やすい初回通知案内モーダル -->
     <div id="modal-welcome-push" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>🔔 通知設定のお願い</h3>
+                <h3><i class="fa-solid fa-bell" style="color: var(--accent);"></i> 通知システムのご案内</h3>
             </div>
-            <p style="font-size: 0.85rem; line-height: 1.5; margin-bottom: 12px;">
-                王子高文化祭アプリへようこそ！<br>
-                ステージの急なタイムテーブル変更や遅延情報などの重大ニュースを画面でお知らせするために、通知設定を有効にしてください。
-            </p>
-            <button style="width:100%; padding:12px; background:var(--primary); color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer;" onclick="closeWelcomeModal()">確認して閉じる</button>
-        </div>
-    </div>
+            
+            <div class="welcome-highlight-box">
+                <div class="welcome-highlight-title">⭐ お気に入り連動通知機能</div>
+                <div class="welcome-highlight-desc">
+                    タイムラインで<strong>「★」をつけたお気に入りステージの遅延通知だけ</strong>をピンポイントで受信できるようになります！
+                </div>
+            </div>
 
-    <!-- スマホ通知設定エリア -->
-    <div id="notification-zone" style="background: #f8f9fa; border: 1px solid #dee2e6; padding: 20px; margin: 15px; border-radius: 10px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
-      <p style="margin: 0 0 15px 0; color: #212529; font-size: 16px; line-height: 1.5; font-weight: 500;">
-        📢 通知をオンにすることで体育館ステージの遅延情報が届くようになります。
-      </p>
-      <button id="change-notification-btn" style="background: #28a745; color: white; border: none; padding: 12px 24px; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; width: 100%; max-width: 280px; transition: 0.2s;">
-        通知システムを変更する
-      </button>
+            <div class="welcome-feature-list">
+                <div class="welcome-feature-item">
+                    <i class="fa-solid fa-circle-check"></i>
+                    <span><strong>関係ない通知は届きません：</strong>自分が見たいステージの情報だけをスマートにキャッチできます。</span>
+                </div>
+                <div class="welcome-feature-item">
+                    <i class="fa-solid fa-circle-check"></i>
+                    <span><strong>後続スケジュールへの影響予測：</strong>前のステージが10分以上遅れた場合、あなたのお気に入りステージに影響が出る恐れがある際も事前にお知らせします。</span>
+                </div>
+            </div>
+            
+            <button style="width:100%; padding:14px; background:var(--primary); color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer; font-size:0.9rem; box-shadow: 0 4px 6px rgba(30,58,138,0.2);" onclick="closeWelcomeModal()">通知機能を理解して閉じる</button>
+        </div>
     </div>
 
     <div id="modal-all-shops" class="modal" onclick="closeModalOnOverlay(event, 'modal-all-shops')">
@@ -394,26 +399,27 @@
         </div>
     </div>
   
+    <!-- 遅延アラートポップアップ -->
     <div id="modal-sync-alert" class="modal" onclick="closeModalOnOverlay(event, 'modal-sync-alert')">
-        <div class="modal-content" style="border:2px solid var(--accent);">
+        <div class="modal-content" style="border:2px solid var(--accent); max-width: 380px;">
             <div class="modal-header">
-                <h3 style="color:var(--accent);"><i class="fa-solid fa-triangle-exclamation"></i> 【遅延速報】</h3>
+                <h3 style="color:#dc2626;"><i class="fa-solid fa-circle-exclamation"></i> ステージ遅延のお知らせ</h3>
                 <button onclick="closeModal('modal-sync-alert')">&times;</button>
             </div>
-            <p id="sync-alert-text" style="font-size:0.95rem; font-weight:bold; line-height:1.6; padding:10px 0; text-align:center;"></p>
-            <button style="width:100%; padding:10px; background:var(--text-main); color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer;" onclick="closeModal('modal-sync-alert')">確認しました</button>
+            <p id="sync-alert-text" style="font-size:0.9rem; font-weight:bold; line-height:1.6; padding:10px 0; color:var(--text-main); white-space:pre-wrap;"></p>
+            <button style="width:100%; padding:12px; background:var(--text-main); color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer;" onclick="closeModal('modal-sync-alert')">確認しました</button>
         </div>
     </div>
   
     <div id="modal-push" class="modal" onclick="closeModalOnOverlay(event, 'modal-push')">
         <div class="modal-content">
             <div class="modal-header"><h3>🔔 プッシュ通知設定</h3><button onclick="closeModal('modal-push')">&times;</button></div>
-            <div class="guide-box" style="margin-bottom:12px;">※サーバーなし environmentのため、別端末へのテスト配信はメニューの「王子高 文化祭案内」を5回連打して開く同期機能をご利用ください。</div>
-            <button style="width:100%; padding:12px; background:var(--primary); color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer;" onclick="alert('アプリ内通知をONにしました！')">通知システムをONにする</button>
+            <div class="guide-box" style="margin-bottom:12px; font-size:0.75rem; line-height:1.4;">※この端末でお気に入り（★）に入れたステージに遅延やスケジュール変更が配信された際、通知バーでお知らせします。</div>
+            <button style="width:100%; padding:12px; background:var(--primary); color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer;" onclick="alert('アプリ内お気に入り通知システムが有効化されています！')">お気に入り通知をONにする</button>
         </div>
     </div>
   
-    <!-- 🛠️ 管理者コントロールパネル（他端末同期機能を追加） -->
+    <!-- 🛠️ 管理者コントロールパネル -->
     <div id="modal-admin" class="modal" onclick="closeModalOnOverlay(event, 'modal-admin')">
         <div class="modal-content admin-panel">
             <div class="modal-header">
@@ -423,18 +429,17 @@
             <label for="admin-target-select">遅延対象イベント:</label>
             <select id="admin-target-select"></select>
             <div class="admin-buttons">
-                <button class="admin-btn delay" onclick="triggerDelayNotification(15)">📢 15分遅延をブロードキャスト</button>
-                <button class="admin-btn delay" onclick="triggerDelayNotification(30)">📢 30分遅延をブロードキャスト</button>
+                <button class="admin-btn delay" onclick="triggerDelayNotification(15)">📢 15分遅延を配信</button>
+                <button class="admin-btn delay" onclick="triggerDelayNotification(30)">📢 30分遅延を配信</button>
                 <button class="admin-btn reset" onclick="triggerDelayNotification(0)">✅ 通常進行に戻す</button>
             </div>
             
             <hr style="margin:20px 0; border:0; border-top:1px solid var(--border);">
             <div style="background:#f3f4f6; padding:10px; border-radius:8px;">
                 <span style="font-size:0.8rem; font-weight:bold; color:var(--text-main);">📲 他の端末へ通知テストデータを送る</span>
-                <p style="font-size:0.7rem; color:var(--text-sub); margin-top:2px;"\>PCで配信した後にこの「コピー」を押し、スマホ側のこの枠に貼り付けて「同期」を押すと通知が再現されます。</p>
                 <input type="text" id="admin-sync-code" placeholder="同期コードがここにでます" onclick="this.select()">
-                <button class="admin-btn sync" style="width:100%; margin-top:6px; padding:6px; font-size:0.75rem;" onclick="copySyncCode()">📋 コードをクリップボードにコピー</button>
-                <button class="admin-btn reset" style="width:100%; margin-top:6px; padding:6px; font-size:0.75rem; background:#2563eb;" onclick="applySyncCode()">📥 貼り付けたコードで手動同期する</button>
+                <button class="admin-btn sync" style="width:100%; margin-top:6px; padding:6px; font-size:0.75rem;" onclick="copySyncCode()">📋 コードをコピー</button>
+                <button class="admin-btn reset" style="width:100%; margin-top:6px; padding:6px; font-size:0.75rem; background:#2563eb;" onclick="applySyncCode()">📥 コードで手動同期</button>
             </div>
         </div>
     </div>
@@ -457,11 +462,10 @@
             '4F': 'map4f.png'
         };
   
-        /* ⚠️ ピンのジャンルのみ指示通りに変更しました */
         const shopData = [
             { id: 1, floor: '1F', location: '新棟', title: '3-7：ポップコーン・わたあめ', genre: '食品販売', x: 103, y: 378, image: '', menu: 'なんと1クラスで二個も催しちゃってます！\nぜひ来てね！' },
             { id: 2, floor: '2F', location: 'A棟', title: '2-7：喫茶 美和の館', genre: '食品販売', x: 410, y: 460, image: 'class-2-7.png', menu: '美味しいワッフルと飲み物を用意してお待ちしております！' },
-            { id: 3, floor: '1F', location: '新棟', title: '3-2：人形浄瑠璃部', genre: '展示・発表', x: 359, y: 460, image: '', menu: '伝統ある人形浄瑠璃 of 公演と人形展示中。' },
+            { id: 3, floor: '1F', location: '新棟', title: '3-2：人形浄瑠璃部', genre: '展示・発表', x: 359, y: 460, image: '', menu: '伝統ある人形浄瑠璃の公演と人形展示中。' },
             { id: 4, floor: '1F', location: '新棟', title: '商業科', genre: '展示・発表', x: 199, y: 347, image: '', menu: '商品開発や企業とのコラボレーションで作った作品の展示会です！' },
             { id: 5, floor: '4F', location: 'A棟', title: '軽音楽部', genre: '体験・アトラクション', x: 284, y: 474, image: '', menu: '軽音楽部元気はつらつにライブ中！！！きて！！！！！！！！' },
             { id: 6, floor: '1F', location: '体育館', title: '体育館イベント', genre: '展示・発表', x: 808, y: 263, image: '', menu: 'ステージ発表や各部活のメインパフォーマンスを行います！' },
@@ -469,14 +473,16 @@
         ];
   
         const facilityData = [
-            { name: "事務室・AED",floor: "1F", x: 200, y: 200, icon: "🚑" },
+            { name: "事務室・AED", floor: "1F", x: 200, y: 200, icon: "🚑" },
             { name: "2F トイレ", floor: "2F", x: 610, y: 545, icon: "🚻" }
         ];
   
+        // タイムライン基本データ
         let timelineData = [
-            { id: 1, day: 1, time: "10:00 - 11:00", name: "吹奏楽部：オープニング", delay: 0 },
-            { id: 2, day: 1, time: "11:30 - 13:00", name: "軽音楽部：無敵ライブ", delay: 0 },
-            { id: 3, day: 2, time: "13:00 - 14:00", name: "ダンス部：ファイナル", delay: 0 }
+            { id: 1, day: 1, time: "10:00 - 11:00", name: "吹奏楽部：オープニング", delay: 0, chainDelay: false },
+            { id: 2, day: 1, time: "11:30 - 13:00", name: "軽音楽部：無敵ライブ", delay: 0, chainDelay: false },
+            { id: 3, day: 1, time: "13:30 - 14:30", name: "演劇部：青春の1ページ", delay: 0, chainDelay: false },
+            { id: 4, day: 2, time: "13:00 - 14:00", name: "ダンス部：ファイナル", delay: 0, chainDelay: false }
         ];
   
         const noticeData = [
@@ -508,6 +514,7 @@
             buildDayTabs();
             initImageMap();
             renderShops();
+            calculateChainDelays(); // 初期状態の連鎖計算
             renderTimeline();
             initAdminSelect();
             buildAllShopsModalList();
@@ -545,10 +552,6 @@
             }).join('');
         }
   
-        style = document.createElement('style');
-        style.innerHTML = '.leaflet-popup-content { margin: 8px 12px !important; }';
-        document.head.appendChild(style);
-  
         function initImageMap() {
             if (map) { map.remove(); }
             map = L.map('map', {
@@ -566,7 +569,7 @@
   
         function updateMapFloorImage() {
             if (currentImageLayer) { map.removeLayer(currentImageLayer); }
-            const imageUrl = MAP_IMAGES\[currentFloor\] || 'map1f.png';
+            const imageUrl = MAP_IMAGES[currentFloor] || 'map1f.png';
   
             currentImageLayer = L.imageOverlay(imageUrl, [[0, 0], [MAP_HEIGHT, MAP_WIDTH]]).addTo(map);
             map.setView([MAP_HEIGHT / 2, MAP_WIDTH / 2], -0.4); 
@@ -576,6 +579,7 @@
         function switchPage(pageId) {
             document.querySelectorAll('.app-page').forEach(p => p.classList.remove('active'));
             document.querySelectorAll('.page-tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(pageId).add
             document.getElementById(pageId).classList.add('active');
             event.currentTarget.classList.add('active');
             if(pageId === 'map-page' && map) {
@@ -669,7 +673,6 @@
         }
   
         function openShopDetailFromMap(shopId) {
-            // 他の詳細を全部閉じてから開く
             document.querySelectorAll('.shop-details').forEach(d => d.classList.remove('open'));
             const detailDiv = document.getElementById(`details-${shopId}`);
             if (detailDiv) {
@@ -686,7 +689,6 @@
             if(filtered.length === 0) {
                 container.innerHTML = '<p style="text-align:center; color:#9ca3af; font-weight:bold; padding:20px;">このフロアには該当する出店がありません</p>';
                 return;
-
             }
   
             filtered.forEach(shop => {
@@ -695,11 +697,10 @@
                 if(shop.genre === '食品販売') { dotClass = "dot-food"; badgeEmoji = "🍴"; }
                 else if(shop.genre === '体験・アトラクション') { dotClass = "dot-play"; badgeEmoji = "🎮"; }
   
-                // 安全対策済みのimgタグ表示ロジック
                 const imageHtml = shop.image ? `<img src="${shop.image}" alt="${shop.title}">` : 'NO IMAGE';
   
                 const card = document.createElement('div');
-                card.className = `shop-card-wrapper`; // ノーマルは白背景に統一
+                card.className = `shop-card-wrapper`;
                 card.innerHTML = `
                     <div class="shop-card" onclick="toggleAccordion(${shop.id})">
                         <span class="shop-loc">${shop.location}</span>
@@ -714,7 +715,7 @@
                     <div class="shop-details" id="details-${shop.id}">
                         <div class="logo-dummy">${imageHtml}</div>
                         <div>
-                            <span style="font-size:0.75rem; font-weight:bold; color:var(--primary);">📋 メメニュー</span>
+                            <span style="font-size:0.75rem; font-weight:bold; color:var(--primary);">📋 メニュー</span>
                             <div style="font-size:0.8rem; margin-bottom:8px; color:var(--text-main); white-space: pre-wrap;">${shop.menu}</div>
                             <button class="map-go-btn" onclick="panToCoordinates(${shop.x}, ${shop.y}, ${shop.id}, '${shop.floor}')"><i class="fa-solid fa-map"></i> マップ上で選択</button>
                         </div>
@@ -743,11 +744,7 @@
         function toggleAccordion(id) {
             const detail = document.getElementById(`details-${id}`);
             const isOpen = detail.classList.contains('open');
-            
-            // 開けるのは一個までにするため、まず全部閉じる
             document.querySelectorAll('.shop-details').forEach(d => d.classList.remove('open'));
-            
-            // クリックされたものが元々閉じていた場合のみ開く
             if (!isOpen) {
                 detail.classList.add('open');
             }
@@ -795,7 +792,7 @@
                 else if(shop.genre === '体験・アトラクション') { genreClass = "genre-play"; badgeEmoji = "🎮"; }
   
                 const btn = document.createElement('button');
-                btn.className = `sidebar-result-item ${genreClass}`; // メニューからは色付きのままで維持
+                btn.className = `sidebar-result-item ${genreClass}`;
                 btn.style.width = "100%"; btn.style.display = "block"; btn.style.marginBottom = "4px";
                 btn.onclick = () => { closeModal('modal-all-shops'); panToCoordinates(shop.x, shop.y, shop.id, shop.floor); };
                 btn.innerHTML = `
@@ -808,19 +805,56 @@
             });
         }
   
+        // 🔄 10分以上の遅延がある場合、それ以降のステージに連鎖フラグを付与するロジック
+        function calculateChainDelays() {
+            // 各日の要素ごとにリセット
+            timelineData.forEach(t => t.chainDelay = false);
+
+            // 日別でソートして連鎖を判定
+            [1, 2].forEach(d => {
+                let currentDaySlots = timelineData.filter(t => t.day === d);
+                let hasMajorDelay = false;
+
+                currentDaySlots.forEach(slot => {
+                    if (hasMajorDelay) {
+                        slot.chainDelay = true;
+                    }
+                    if (slot.delay >= 10) {
+                        hasMajorDelay = true; // 10分以上の遅延が検知されたら、これ以降は影響あり
+                    }
+                });
+            });
+        }
+
         function renderTimeline() {
             const container = document.getElementById('timeline-container');
             container.innerHTML = '';
+            
+            calculateChainDelays();
+
             timelineData.filter(t => t.day === currentDay).forEach(slot => {
                 const isFav = favorites.includes(slot.id);
                 const isDelayed = slot.delay > 0;
+                const isChain = slot.chainDelay;
+                
+                let cardStatusClass = '';
+                let statusText = '✅ 通常通り';
+
+                if (isDelayed) {
+                    cardStatusClass = 'status-delayed';
+                    statusText = `⚠️ 予定より${slot.delay}分遅れ`;
+                } else if (isChain) {
+                    cardStatusClass = 'status-chain-delayed';
+                    statusText = `⏳ 前の遅延による影響の恐れあり`;
+                }
+
                 const div = document.createElement('div');
-                div.className = `time-slot ${isDelayed ? 'status-delayed' : ''}`;
+                div.className = `time-slot ${cardStatusClass}`;
                 div.innerHTML = `
                     <div>
                         <span class="time-text">${slot.time}</span>
                         <div class="band-name">${slot.name}</div>
-                        <span class="band-status ${isDelayed ? 'delayed' : ''}">${isDelayed ? `⚠️ ${slot.delay}分遅延中` : '✅ 通常通り'}</span>
+                        <span class="band-status ${isDelayed ? 'delayed' : (isChain ? 'chain-delayed' : '')}">${statusText}</span>
                     </div>
                     <button class="fav-btn ${isFav ? 'active' : ''}" onclick="toggleFavorite(${slot.id})">★</button>
                 `;
@@ -833,6 +867,7 @@
             else { favorites.push(id); }
             localStorage.setItem('festival_favs', JSON.stringify(favorites));
             renderTimeline();
+            syncCloudAndCheckAlert(); // お気に入り状態の切り替えでアラートをリアルタイム再検証
         }
   
         function handleAdminKnock() {
@@ -868,11 +903,10 @@
             const broadcastPayload = { target: targetName, delay: minutes, timestamp: Date.now() };
             localStorage.setItem('festival_live_broadcast', JSON.stringify(broadcastPayload));
             updateSyncCodeDisplay();
-            alert(`【送信完了】${targetName}の${minutes}分遅延速報を内部保存しました。`);
+            alert(`【送信完了】「${targetName}」の情報を保存しました。`);
             syncCloudAndCheckAlert(); 
         }
   
-        /* 📲 クロスデバイス検証用の擬似コード生成 */
         function updateSyncCodeDisplay() {
             const raw = localStorage.getItem('festival_live_broadcast');
             if (raw) {
@@ -884,16 +918,16 @@
             input.select();
             input.setSelectionRange(0, 99999);
             navigator.clipboard.writeText(input.value);
-            alert("同期用コードをコピーしました！別の端末に送って貼り付けてください。");
+            alert("同期用コードをコピーしました！");
         }
         function applySyncCode() {
             const val = document.getElementById('admin-sync-code').value.trim();
             if(!val) return alert("コードが空欄です");
             try {
                 const decoded = decodeURIComponent(escape(atob(val)));
-                JSON.parse(decoded); // 検証
+                JSON.parse(decoded);
                 localStorage.setItem('festival_live_broadcast', decoded);
-                alert("手動同期が完了しました！通知を反映します。");
+                alert("手動同期が完了しました！");
                 closeModal('modal-admin');
                 syncCloudAndCheckAlert();
             } catch(e) {
@@ -901,34 +935,76 @@
             }
         }
   
+        // 🔔 【重要】お気に入り判定＆連鎖遅延アラートの受信ロジック
         function syncCloudAndCheckAlert() {
             const raw = localStorage.getItem('festival_live_broadcast');
             if (!raw) return;
             const data = JSON.parse(raw);
   
+            let stateChanged = false;
+
+            // 1. 各データの遅延をメモリ内に同期
             timelineData.forEach(slot => {
                 if (slot.name === data.target) {
                     if (slot.delay !== data.delay) {
                         slot.delay = data.delay;
-                        renderTimeline();
-                        
-                        const alertBar = document.getElementById('global-alert');
-                        document.getElementById('alert-message').innerText = data.delay > 0 ? `遅延発生: ${data.target} (${data.delay}分遅れ)` : "全ステージ通常通り";
-                        alertBar.style.display = 'flex';
-  
-                        const lastSeenPopupKey = `popup_seen_${data.target}_${data.delay}_${data.timestamp}`;
-                        if (!localStorage.getItem(lastSeenPopupKey)) {
-                            const msg = data.delay > 0 
-                                ? `【進行変更】\n「${data.target}」に、現在【${data.delay}分】の遅れが発生しています！` 
-                                : `【復旧連絡】\n遅延していた「${data.target}」は通常進行に戻りました。`;
-                            
-                            document.getElementById('sync-alert-text').innerText = msg;
-                            document.getElementById('modal-sync-alert').classList.add('show');
-                            localStorage.setItem(lastSeenPopupKey, 'true'); 
-                        }
+                        stateChanged = true;
                     }
                 }
             });
+
+            if (stateChanged) {
+                // 連鎖フラグを再計算
+                calculateChainDelays();
+                renderTimeline();
+            }
+
+            // 2. お気に入り登録しているステージ情報を抽出
+            const myFavSlots = timelineData.filter(t => favorites.includes(t.id));
+            
+            // 3. 自分のお気に入りに「直接の遅延」または「連鎖遅延の影響」があるか探す
+            const activeDirectDelay = myFavSlots.find(t => t.delay > 0);
+            const activeChainDelay = myFavSlots.find(t => t.chainDelay === true);
+
+            const alertBar = document.getElementById('global-alert');
+
+            // 画面上部アラートバーの制御（お気に入りが対象のときだけ表示）
+            if (activeDirectDelay) {
+                document.getElementById('alert-message').innerText = `お気に入り遅延: ${activeDirectDelay.name} (${activeDirectDelay.delay}分遅れ)`;
+                alertBar.style.display = 'flex';
+            } else if (activeChainDelay) {
+                document.getElementById('alert-message').innerText = `スケジュール警告: お気に入りステージに遅延影響の恐れあり`;
+                alertBar.style.display = 'flex';
+            } else {
+                alertBar.style.display = 'none';
+            }
+
+            // 4. 新着通知ポップアップの制御（お気に入りに入っている場合のみダイアログ表示）
+            const lastSeenPopupKey = `popup_seen_${data.target}_${data.delay}_${data.timestamp}`;
+            
+            // 通知データ元が自分のお気に入り、もしくは自分のお気に入りが連鎖影響を受ける位置にある場合
+            const isDirectTargetFav = myFavSlots.some(t => t.name === data.target);
+            const isAnyFavImpactedByChain = myFavSlots.some(t => t.chainDelay === true);
+
+            if ((isDirectTargetFav || (data.delay >= 10 && isAnyFavImpactedByChain)) && !localStorage.getItem(lastSeenPopupKey)) {
+                let msg = "";
+                if (isDirectTargetFav && data.delay > 0) {
+                    msg = `【お気に入りステージ遅延】\nあなたが登録した「${data.target}」の開始時刻が【${data.delay}分】遅れています。`;
+                    if(data.delay >= 10) {
+                        msg += `\n\n⚠️【ご注意】\n10分以上の遅れのため、これ以降に開催されるステージスケジュールにも影響が出る可能性があります。`;
+                    }
+                } else if (data.delay >= 10 && isAnyFavImpactedByChain) {
+                    msg = `【スケジュール変更の可能性】\nステージ「${data.target}」で${data.delay}分の大幅な遅延が発生しました。\n\nお気に入り登録したステージが前のスケジュールの遅延により開催時刻が変わる恐れがあります。最新のタイムラインをご確認ください。`;
+                } else if (isDirectTargetFav && data.delay === 0) {
+                    msg = `【復旧連絡】\nお気に入りの「${data.target}」は通常進行に戻りました。`;
+                }
+
+                if (msg !== "") {
+                    document.getElementById('sync-alert-text').innerText = msg;
+                    document.getElementById('modal-sync-alert').classList.add('show');
+                }
+                localStorage.setItem(lastSeenPopupKey, 'true'); 
+            }
         }
   
         function initAdminSelect() {
@@ -939,28 +1015,6 @@
         function openModal(id) { toggleSidebar(); document.getElementById(id).classList.add('show'); }
         function closeModal(id) { document.getElementById(id).classList.remove('show'); }
         function closeModalOnOverlay(e, id) { if (e.target === document.getElementById(id)) closeModal(id); }
-    </script>
-    <script>
-      const notifyBtn = document.getElementById('change-notification-btn');
-      
-      notifyBtn.addEventListener('click', () => {
-        if (!('Notification' in window)) {
-          alert('お使いのブラウザは通知機能に対応していません。別のブラウザでお試しください。');
-          return;
-        }
-      
-        Notification.requestPermission().then((permission) => {
-          if (permission === 'granted') {
-            alert('ブラウザの設定で【許可】されました！ステージの遅延情報をお届けします。');
-          } else if (permission === 'denied') {
-            alert('ブラウザの設定で【ブロック】されました。通知を受け取るには、アドレスバーの鍵マークやベルマーク（設定）からブロックを解除してください。');
-          } else {
-            alert('通知設定が変更されませんでした。');
-          }
-        }).catch((error) => {
-          console.error('通知のリクエスト中にエラーが発生しました:', error);
-        });
-      });
     </script>
 </body>
 </html>
