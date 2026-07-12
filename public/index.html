@@ -84,7 +84,7 @@
             -webkit-overflow-scrolling: touch;
         }
   
-        /* 🚨 地図の上の遅延バーのスタイル調整 */
+        /* 🚨 地図の上の遅延バー */
         .alert-bar {
             position: fixed;
             top: 56px;
@@ -155,10 +155,8 @@
         .sidebar-nav button { width: 100%; background: none; border: none; text-align: left; padding: 10px 12px; font-size: 0.9rem; font-weight: 500; display: flex; align-items: center; gap: 12px; border-radius: 6px; cursor: pointer; color: var(--text-main); margin-bottom: 4px; }
         .sidebar-nav button:active { background: var(--primary-light); color: var(--primary); }
         .sidebar-divider { font-size: 0.75rem; font-weight: bold; color: var(--text-sub); margin: 14px 0 6px 4px; }
-        .sidebar-sub-text { font-size: 0.75rem; color: var(--text-sub); margin: 0 0 6px 4px; font-weight: bold; }
   
         .leaflet-top.leaflet-left { top: 10px !important; }
-  
         .leaflet-popup-content-wrapper { border-radius: 8px !important; padding: 2px 4px !important; }
         .popup-location { font-size: 0.65rem; font-weight: bold; color: var(--text-sub); }
         .popup-title { font-size: 0.8rem; font-weight: bold; color: var(--text-main); margin-bottom: 4px; }
@@ -171,7 +169,7 @@
         .pin-dot.pin-exhibit { background: #86efac; border-color: #22c55e; }
         .pin-dot.pin-dot-play { background: #fde047; border-color: #eab308; }
         
-        /* ✨ 選択されたピン：完全に不透明化、かつ拡大 */
+        /* ✨ 選択されたピン */
         .pin-dot.selected {
             opacity: 1.0 !important;
             transform: scale(2.0);
@@ -185,7 +183,6 @@
   
         .sticky-map-controls { position: sticky; top: 0; z-index: 998; background: white; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         
-        /* 📱 横スクロール操作性の向上 */
         .tab-container { display: flex; padding: 6px; gap: 6px; overflow-x: auto; -webkit-overflow-scrolling: touch; touch-action: pan-x; }
         .tab-btn { flex: 1; flex-shrink: 0; min-width: 75px; border: none; background: #f3f4f6; padding: 10px 0; font-size: 0.85rem; font-weight: bold; border-radius: 6px; color: var(--text-sub); cursor: pointer; }
         .tab-btn.active { background: var(--primary); color: white; }
@@ -247,15 +244,13 @@
         .greeting-card { background: #f8fafc; border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-bottom: 12px; }
         .greeting-title { font-size: 0.85rem; font-weight: bold; color: var(--primary); margin-bottom: 4px; }
         .greeting-text { font-size: 0.8rem; line-height: 1.5; color: var(--text-main); white-space: pre-wrap; }
-        .guide-box { background: #f3f4f6; border-radius: 6px; padding: 10px; font-size: 0.8rem; line-height: 1.4; color: var(--text-main); margin-top: 8px; }
   
         .admin-panel label { font-weight: bold; display: block; margin-top: 10px; font-size: 0.9rem; }
-        .admin-panel select, .admin-panel text-area, .admin-panel input { width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #d1d5db; margin-top: 5px; font-size: 0.85rem; }
+        .admin-panel select { width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #d1d5db; margin-top: 5px; font-size: 0.85rem; }
         .admin-buttons { display: flex; flex-direction: column; gap: 8px; margin-top: 15px; }
         .admin-btn { border: none; padding: 10px; border-radius: 6px; font-weight: bold; color: white; cursor: pointer; }
         .admin-btn.delay { background: #eab308; }
         .admin-btn.reset { background: #10b981; }
-        .admin-btn.sync { background: #4b5563; }
     </style>
 </head>
 <body>
@@ -418,15 +413,6 @@
                 <button class="admin-btn delay" onclick="triggerDelayNotification(30)">📢 30分遅延をブロードキャスト</button>
                 <button class="admin-btn reset" onclick="triggerDelayNotification(0)">✅ 通常進行に戻す</button>
             </div>
-            
-            <hr style="margin:20px 0; border:0; border-top:1px solid var(--border);">
-            <div style="background:#f3f4f6; padding:10px; border-radius:8px;">
-                <span style="font-size:0.8rem; font-weight:bold; color:var(--text-main);">📲 他の端末へ通知テストデータを送る</span>
-                <p style="font-size:0.7rem; color:var(--text-sub); margin-top:2px;">PCで配信した後にこの「コピー」を押し、スマホ側のこの枠に貼り付けて「同期」を押すと通知が再現されます。</p>
-                <input type="text" id="admin-sync-code" placeholder="同期コードがここにでます" onclick="this.select()">
-                <button class="admin-btn sync" style="width:100%; margin-top:6px; padding:6px; font-size:0.75rem;" onclick="copySyncCode()">📋 コードをクリップボードにコピー</button>
-                <button class="admin-btn reset" style="width:100%; margin-top:6px; padding:6px; font-size:0.75rem; background:#2563eb;" onclick="applySyncCode()">📥 貼り付けたコードで手動同期する</button>
-            </div>
         </div>
     </div>
   
@@ -439,8 +425,10 @@
     
     <script>
         // ==========================================
-        // 🎨 【データ定義エリア】
+        // 🎨 【データ・通信設定エリア】
         // ==========================================
+        const FIREBASE_DB_URL = "https://ouji-app-default-rtdb.firebaseio.com/broadcast.json";
+
         const MAP_IMAGES = {
             '1F': 'map1f.png',
             '2F': 'map2f.png',
@@ -451,7 +439,7 @@
         const shopData = [
             { id: 1, floor: '1F', location: '新棟', title: '3-7：ポップコーン・わたあめ', genre: '食品販売', x: 103, y: 378, image: '', menu: 'なんと1クラスで二個も催しちゃってます！\nぜひ来てね！' },
             { id: 2, floor: '2F', location: 'A棟', title: '2-7：喫茶 美和の館', genre: '食品販売', x: 410, y: 460, image: 'class-2-7.png', menu: '美味しいワッフルと飲み物を用意してお待ちしております！' },
-            { id: 3, floor: '1F', location: '新棟', title: '3-2：人形浄瑠璃部', genre: '展示・部活', x: 359, y: 460, image: '', menu: '伝統ある人形浄瑠璃の公演と人形展示中。' },
+            { id: 3, floor: '1F', location: '新棟', title: '3-2：人形浄瑠璃部', genre: '展示・部活', x: 359, y: 460, image: '', menu: '伝統ある人形浄瑠璃 of 公演と人形展示中。' },
             { id: 4, floor: '1F', location: '新棟', title: '商業科', genre: '展示・部活', x: 199, y: 347, image: '', menu: '商品開発や企業とのコラボレーションで作った作品の展示会です！' },
             { id: 5, floor: '4F', location: 'A棟', title: '軽音楽部', genre: '体験・催し', x: 284, y: 474, image: '', menu: '軽音楽部元気はつらつにライブ中！！！きて！！！！！！！！' },
             { id: 6, floor: '1F', location: '体育館', title: '体育館イベント', genre: '展示・部活', x: 808, y: 263, image: '', menu: 'ステージ発表や各部活のメインパフォーマンスを行います！' },
@@ -502,11 +490,11 @@
             initAdminSelect();
             buildAllShopsModalList();
             checkFirstAccessWelcome(); 
-            updateSyncCodeDisplay();
             initNotificationButtonLogic();
             
             document.getElementById('notice-list-container').innerHTML = noticeData.map(d => `<li class="greeting-card"><b>${d.title}</b><span style="display:block;color:var(--text-sub);font-size:0.8rem;margin-top:4px;">${d.sub}</span></li>`).join('');
             
+            // 2秒に1回自動で最新の遅延データをチェック
             setInterval(syncCloudAndCheckAlert, 2000);
             syncCloudAndCheckAlert(); 
         };
@@ -557,7 +545,7 @@
   
         function updateMapFloorImage() {
             if (currentImageLayer) { map.removeLayer(currentImageLayer); }
-            const imageUrl = MAP_IMAGES[currentFloor] || 'map1f.png'; // 修正箇所（バックスラッシュを撤去）
+            const imageUrl = MAP_IMAGES[currentFloor] || 'map1f.png';
   
             currentImageLayer = L.imageOverlay(imageUrl, [[0, 0], [MAP_HEIGHT, MAP_WIDTH]]).addTo(map);
             map.setView([MAP_HEIGHT / 2, MAP_WIDTH / 2], -0.4); 
@@ -816,7 +804,6 @@
                 adminKnockCount = 0;
                 const pass = prompt("管理者パスワードを入力してください:");
                 if (pass === ADMIN_PASSWORD) {
-                    updateSyncCodeDisplay();
                     openModal('modal-admin');
                 }
                 else if(pass !== null) alert("パスワードが違います。");
@@ -837,71 +824,67 @@
             closeModal('modal-welcome-push');
         }
   
+        // 【発信側】管理者がボタンを押したら、Firebaseへデータを上書き保存（一斉自動化）
         function triggerDelayNotification(minutes) {
             const targetName = document.getElementById('admin-target-select').value;
-            const broadcastPayload = { target: targetName, delay: minutes, timestamp: Date.now() };
-            localStorage.setItem('festival_live_broadcast', JSON.stringify(broadcastPayload));
-            updateSyncCodeDisplay();
-            alert(`【送信完了】${targetName}の${minutes}分遅延速報を内部保存しました。`);
-            syncCloudAndCheckAlert(); 
+            const broadcastPayload = { 
+                target: targetName, 
+                delay: minutes, 
+                timestamp: Date.now() 
+            };
+
+            fetch(FIREBASE_DB_URL, {
+                method: 'PUT',
+                body: JSON.stringify(broadcastPayload)
+            })
+            .then(response => {
+                if(response.ok) {
+                    alert(`【一斉配信成功】\n「${targetName}」の ${minutes}分遅延 を全員のスマホへ自動配信しました！`);
+                } else {
+                    alert("配信エラーが発生しました。FirebaseのURLを確認してください。");
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                alert("通信エラー：インターネットの接続状態を確認してください。");
+            });
         }
   
-        function updateSyncCodeDisplay() {
-            const raw = localStorage.getItem('festival_live_broadcast');
-            if (raw) {
-                document.getElementById('admin-sync-code').value = btoa(unescape(encodeURIComponent(raw)));
-            }
-        }
-        function copySyncCode() {
-            const input = document.getElementById('admin-sync-code');
-            input.select();
-            input.setSelectionRange(0, 99999);
-            navigator.clipboard.writeText(input.value);
-            alert("同期用コードをコピーしました！別の端末に送って貼り付けてください。");
-        }
-        function applySyncCode() {
-            const val = document.getElementById('admin-sync-code').value.trim();
-            if(!val) return alert("コードが空欄です");
-            try {
-                const decoded = decodeURIComponent(escape(atob(val)));
-                JSON.parse(decoded); 
-                localStorage.setItem('festival_live_broadcast', decoded);
-                alert("手動同期が完了しました！通知を反映します。");
-                closeModal('modal-admin');
-                syncCloudAndCheckAlert();
-            } catch(e) {
-                alert("無効な同期コードです。");
-            }
-        }
-  
+        // 【受信側】全員のスマホが、2秒に1回このデータベースを自動チェックしに走る
         function syncCloudAndCheckAlert() {
-            const raw = localStorage.getItem('festival_live_broadcast');
-            if (!raw) return;
-            const data = JSON.parse(raw);
+            fetch(FIREBASE_DB_URL)
+            .then(response => {
+                if (!response.ok) return null;
+                return response.json();
+            })
+            .then(data => {
+                if (!data) return;
   
-            timelineData.forEach(slot => {
-                if (slot.name === data.target) {
-                    if (slot.delay !== data.delay) {
-                        slot.delay = data.delay;
-                        renderTimeline();
-                        
-                        const alertBar = document.getElementById('global-alert');
-                        document.getElementById('alert-message').innerText = data.delay > 0 ? `遅延発生: ${data.target} (${data.delay}分遅れ)` : "全ステージ通常通り";
-                        alertBar.style.display = 'flex';
-  
-                        const lastSeenPopupKey = `popup_seen_${data.target}_${data.delay}_${data.timestamp}`;
-                        if (!localStorage.getItem(lastSeenPopupKey)) {
-                            const msg = data.delay > 0 
-                                ? `【進行変更】\n「${data.target}」に、現在【${data.delay}分】の遅れが発生しています！` 
-                                : `【復旧連絡】\n遅延していた「${data.target}」は通常進行に戻りました。`;
+                timelineData.forEach(slot => {
+                    if (slot.name === data.target) {
+                        if (slot.delay !== data.delay) {
+                            slot.delay = data.delay;
+                            renderTimeline();
                             
-                            document.getElementById('sync-alert-text').innerText = msg;
-                            document.getElementById('modal-sync-alert').classList.add('show');
-                            localStorage.setItem(lastSeenPopupKey, 'true'); 
+                            const alertBar = document.getElementById('global-alert');
+                            document.getElementById('alert-message').innerText = data.delay > 0 ? `遅延発生: ${data.target} (${data.delay}分遅れ)` : "全ステージ通常通り";
+                            alertBar.style.display = 'flex';
+  
+                            const lastSeenPopupKey = `popup_seen_${data.target}_${data.delay}_${data.timestamp}`;
+                            if (!localStorage.getItem(lastSeenPopupKey)) {
+                                const msg = data.delay > 0 
+                                    ? `【進行変更】\n「${data.target}」に、現在【${data.delay}分】の遅れが発生しています！` 
+                                    : `【復旧連絡】\n遅延していた「${data.target}」は通常進行に戻りました。`;
+                                
+                                document.getElementById('sync-alert-text').innerText = msg;
+                                document.getElementById('modal-sync-alert').classList.add('show');
+                                localStorage.setItem(lastSeenPopupKey, 'true'); 
+                            }
                         }
                     }
-                }
-            });
+                });
+            })
+            .catch(err => console.log("同期チェック中..."));
         }
   
         function initAdminSelect() {
@@ -913,72 +896,67 @@
         function closeModal(id) { document.getElementById(id).classList.remove('show'); }
         function closeModalOnOverlay(e, id) { if (e.target === document.getElementById(id)) closeModal(id); }
 
-       function initNotificationButtonLogic() {
-    const notifyBtn = document.getElementById('change-notification-btn');
-    if (!notifyBtn) return;
+        function initNotificationButtonLogic() {
+            const notifyBtn = document.getElementById('change-notification-btn');
+            if (!notifyBtn) return;
 
-    // 現在の通知ステータスをチェックしてボタンの見た目を変える
-    if ('Notification' in window) {
-        if (Notification.permission === 'granted') {
-            notifyBtn.innerText = '✅ 通知はすでに許可されています';
-            notifyBtn.style.background = '#28a745';
-        } else if (Notification.permission === 'denied') {
-            notifyBtn.innerText = '❌ ブロック中（解除方法はこちら）';
-            notifyBtn.style.background = '#dc3545';
-        }
-    }
-
-    notifyBtn.addEventListener('click', () => {
-        // 1. そもそもブラウザが対応しているか
-        if (!('Notification' in window)) {
-            alert('お使いのブラウザや環境は通知機能に対応していません。※iPhoneの場合は「ホーム画面に追加」してから開いてください。');
-            return;
-        }
-
-       // 2. すでに拒否されている場合の親切なアナウンス（Android/PC用）
-        if (Notification.permission === 'denied') {
-            alert(
-                '【通知のブロックを解除する方法】\n\n' +
-                '現在、ブラウザの設定で通知が「ブロック」されています。以下の手順で簡単に解除できます！\n\n' +
-                '① 画面の一番上、URLの左側にある「鍵マーク（または設定マーク）」をタップします。\n' +
-                '②「権限」または「サイトの設定」を開きます。\n' +
-                '③「通知」を【許可（オン）】に切り替えてください。\n\n' +
-                '設定を変えたあと、画面をもう一度読み込む（リロードする）と通知が届くようになります！'
-            );
-            return;
-        }
-
-        // 3. すでに許可されている場合
-        if (Notification.permission === 'granted') {
-            alert('通知はすでに許可されています！ステージの遅延情報をお待ちください。');
-            closeModal('modal-push');
-            return;
-        }
-
-        // 4. まだ許可も拒否もされていない場合（ポップアップを要求）
-        notifyBtn.innerText = 'リクエスト中...';
-        
-        Notification.requestPermission().then((permission) => {
-            if (permission === 'granted') {
-                alert('ありがとうございます！通知が許可されました。');
-                notifyBtn.innerText = '✅ 通知許可済み';
-                notifyBtn.style.background = '#28a745';
-                closeModal('modal-push'); 
-            } else if (permission === 'denied') {
-                alert('通知がブロックされました。今後通知を受け取るにはブラウザの設定から変更が必要です。');
-                notifyBtn.innerText = '❌ ブロック中';
-                notifyBtn.style.background = '#dc3545';
-            } else {
-                alert('通知設定が保留されました。再度お試しください。');
-                notifyBtn.innerText = '通知システムを変更する';
+            if ('Notification' in window) {
+                if (Notification.permission === 'granted') {
+                    notifyBtn.innerText = '✅ 通知はすでに許可されています';
+                    notifyBtn.style.background = '#28a745';
+                } else if (Notification.permission === 'denied') {
+                    notifyBtn.innerText = '❌ ブロック中（解除方法はこちら）';
+                    notifyBtn.style.background = '#dc3545';
+                }
             }
-        }).catch((error) => {
-            console.error('通知要求エラー:', error);
-            alert('通知のリクエスト中にエラーが発生しました。HTTPS通信（安全な接続）になっているか確認してください。');
-            notifyBtn.innerText = '通知システムを変更する';
-        });
-    });
-}
+
+            notifyBtn.addEventListener('click', () => {
+                if (!('Notification' in window)) {
+                    alert('お使いのブラウザや環境は通知機能に対応していません。※iPhoneの場合は「ホーム画面に追加」してから開いてください。');
+                    return;
+                }
+  
+                if (Notification.permission === 'denied') {
+                    alert(
+                        '【通知のブロックを解除する方法】\n\n' +
+                        '現在、ブラウザの設定で通知が「ブロック」されています。以下の手順で簡単に解除できます！\n\n' +
+                        '① 画面の一番上、URLの左側にある「鍵マーク（または設定マーク）」をタップします。\n' +
+                        '②「権限」または「サイトの設定」を開きます。\n' +
+                        '③「通知」を【許可（オン）】に切り替えてください。\n\n' +
+                        '設定を変えたあと、画面をもう一度読み込む（リロードする）と通知が届くようになります！'
+                    );
+                    return;
+                }
+
+                if (Notification.permission === 'granted') {
+                    alert('通知はすでに許可されています！ステージの遅延情報をお待ちください。');
+                    closeModal('modal-push');
+                    return;
+                }
+
+                notifyBtn.innerText = 'リクエスト中...';
+                
+                Notification.requestPermission().then((permission) => {
+                    if (permission === 'granted') {
+                        alert('ありがとうございます！通知が許可されました。');
+                        notifyBtn.innerText = '✅ 通知許可済み';
+                        notifyBtn.style.background = '#28a745';
+                        closeModal('modal-push'); 
+                    } else if (permission === 'denied') {
+                        alert('通知がブロックされました。ブラウザのURLの横の設定マークから変更が可能です。');
+                        notifyBtn.innerText = '❌ ブロック中';
+                        notifyBtn.style.background = '#dc3545';
+                    } else {
+                        alert('通知設定が保留されました。再度お試しください。');
+                        notifyBtn.innerText = '通知システムを変更する';
+                    }
+                }).catch((error) => {
+                    console.error('通知要求エラー:', error);
+                    alert('通知のリクエスト中にエラーが発生しました。HTTPS通信であることを確認してください。');
+                    notifyBtn.innerText = '通知システムを変更する';
+                });
+            });
+        }
     </script>
 </body>
 </html>
