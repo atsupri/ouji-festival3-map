@@ -84,6 +84,7 @@
             -webkit-overflow-scrolling: touch;
         }
   
+        /* 🚨 地図の上の遅延バーのスタイル調整 */
         .alert-bar {
             position: fixed;
             top: 56px;
@@ -101,7 +102,17 @@
             font-weight: bold;
         }
         .alert-content i { margin-right: 8px; color: #dc2626; }
-        .alert-close-btn { background: none; border: none; font-size: 1.2rem; color: #991b1b; cursor: pointer; }
+        .alert-confirm-btn {
+            background-color: #dc2626;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
   
         .app-header {
             position: fixed;
@@ -174,7 +185,7 @@
   
         .sticky-map-controls { position: sticky; top: 0; z-index: 998; background: white; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         
-        /* 📱 横スクロール操作性の向上（タッチ領域の確保とバグ修正） */
+        /* 📱 横スクロール操作性の向上 */
         .tab-container { display: flex; padding: 6px; gap: 6px; overflow-x: auto; -webkit-overflow-scrolling: touch; touch-action: pan-x; }
         .tab-btn { flex: 1; flex-shrink: 0; min-width: 75px; border: none; background: #f3f4f6; padding: 10px 0; font-size: 0.85rem; font-weight: bold; border-radius: 6px; color: var(--text-sub); cursor: pointer; }
         .tab-btn.active { background: var(--primary); color: white; }
@@ -201,7 +212,7 @@
         .shop-title { flex: 1; font-weight: bold; font-size: 0.9rem; display: flex; flex-direction: column; gap: 2px; color: var(--text-main); }
         .shop-genre { font-size: 0.75rem; color: var(--text-sub); margin-top: 1px; }
         
-        /* 🖼️ 店舗詳細のレイアウト微調整 */
+        /* 🖼️ 店舗詳細 */
         .shop-details { display: none; padding: 0 14px 14px; border-top: 1px dashed var(--border); background: rgba(255,255,255,0.5); grid-template-columns: 85px 1fr; gap: 12px; padding-top: 14px; }
         .shop-details.open { display: grid; }
         .logo-dummy { width: 85px; height: 85px; background: #e5e7eb; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 0.65rem; color: #9ca3af; overflow: hidden; border: 1px solid #d1d5db; }
@@ -249,12 +260,13 @@
 </head>
 <body>
   
+    <!-- 🚨 修正：地図の上の警告バーに「確認しました」ボタンを設置 -->
     <div id="global-alert" class="alert-bar" style="display: none;">
         <div class="alert-content">
             <i class="fa-solid fa-triangle-exclamation"></i>
             <span id="alert-message">ステージ進行に遅れが出ています。</span>
         </div>
-        <button class="alert-close-btn" onclick="closeAlertBar()">&times;</button>
+        <button class="alert-confirm-btn" onclick="closeAlertBar()">確認しました</button>
     </div>
   
     <header class="app-header">
@@ -293,7 +305,7 @@
     <main class="app-main">
         <section id="map-page" class="app-page active">
             <div id="map-container">
-                <div id="map"></div>
+                <div id="map vectors"></div>
             </div>
             
             <div class="scrollable-content">
@@ -334,15 +346,7 @@
             <button style="width:100%; padding:12px; background:var(--primary); color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer;" onclick="closeWelcomeModal()">確認して閉じる</button>
         </div>
     </div>
-  	<!-- スマホ通知設定エリア -->
-<div id="notification-zone" style="background: #f8f9fa; border: 1px solid #dee2e6; padding: 20px; margin: 15px; border-radius: 10px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
-  <p style="margin: 0 0 15px 0; color: #212529; font-size: 16px; line-height: 1.5; font-weight: 500;">
-    📢 通知をオンにすることで体育館ステージの遅延情報が届くようになります。
-  </p>
-  <button id="change-notification-btn" style="background: #28a745; color: white; border: none; padding: 12px 24px; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; width: 100%; max-width: 280px; transition: 0.2s;">
-    通知システムを変更する
-  </button>
-</div>
+
     <div id="modal-all-shops" class="modal" onclick="closeModalOnOverlay(event, 'modal-all-shops')">
         <div class="modal-content" style="max-width: 450px;">
             <div class="modal-header">
@@ -376,6 +380,7 @@
         </div>
     </div>
   
+    <!-- 🔔 修正：中央のポップアップの確認ボタン -->
     <div id="modal-sync-alert" class="modal" onclick="closeModalOnOverlay(event, 'modal-sync-alert')">
         <div class="modal-content" style="border:2px solid var(--accent);">
             <div class="modal-header">
@@ -387,15 +392,22 @@
         </div>
     </div>
   
+    <!-- 🔔 修正：メニューのプッシュ通知設定画面をスマートに完全刷新（米印撤去、本物ポップアップ連動） -->
     <div id="modal-push" class="modal" onclick="closeModalOnOverlay(event, 'modal-push')">
-        <div class="modal-content">
-            <div class="modal-header"><h3>🔔 プッシュ通知設定</h3><button onclick="closeModal('modal-push')">&times;</button></div>
-            <div class="guide-box" style="margin-bottom:12px;">※サーバーなし環境のため、別端末へのテスト配信はメニューの「王子高 文化祭案内」を5回連打して開く同期機能をご利用ください。</div>
-            <button style="width:100%; padding:12px; background:var(--primary); color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer;" onclick="alert('アプリ内通知をONにしました！')">通知システムをONにする</button>
+        <div class="modal-content" style="text-align: center;">
+            <div class="modal-header">
+                <h3>🔔 プッシュ通知設定</h3>
+                <button onclick="closeModal('modal-push')">&times;</button>
+            </div>
+            <p style="margin: 10px 0 20px 0; color: #212529; font-size: 15px; line-height: 1.6; font-weight: 500;">
+                📢 通知をオンにすることで体育館ステージの遅延情報が届くようになります。
+            </p>
+            <button id="change-notification-btn" style="width:100%; padding:14px; background:#28a745; color:white; border:none; border-radius:6px; font-weight:bold; font-size:16px; cursor:pointer;">
+                通知システムを変更する
+            </button>
         </div>
     </div>
   
-    <!-- 🛠️ 管理者コントロールパネル（他端末同期機能を追加） -->
     <div id="modal-admin" class="modal" onclick="closeModalOnOverlay(event, 'modal-admin')">
         <div class="modal-content admin-panel">
             <div class="modal-header">
@@ -439,7 +451,6 @@
             '4F': 'map4f.png'
         };
   
-        /* 💡 喫茶 美和の館に image: 'class-2-7.png' をセットしました */
         const shopData = [
             { id: 1, floor: '1F', location: '新棟', title: '3-7：ポップコーン・わたあめ', genre: '食品販売', x: 103, y: 378, image: '', menu: 'なんと1クラスで二個も催しちゃってます！\nぜひ来てね！' },
             { id: 2, floor: '2F', location: 'A棟', title: '2-7：喫茶 美和の館', genre: '食品販売', x: 410, y: 460, image: 'class-2-7.png', menu: '美味しいワッフルと飲み物を用意してお待ちしております！' },
@@ -495,13 +506,14 @@
             buildAllShopsModalList();
             checkFirstAccessWelcome(); 
             updateSyncCodeDisplay();
+            initNotificationButtonLogic(); // 通知ボタン連動ロジックの起動
             
             document.getElementById('notice-list-container').innerHTML = noticeData.map(d => `<li class="greeting-card"><b>${d.title}</b><span style="display:block;color:var(--text-sub);font-size:0.8rem;margin-top:4px;">${d.sub}</span></li>`).join('');
             
             setInterval(syncCloudAndCheckAlert, 2000);
             syncCloudAndCheckAlert(); 
         };
-
+  
         function buildFloorTabs() {
             const defaultFloors = ['1F', '2F', '3F', '4F'];
             const dataFloors = shopData.map(s => s.floor);
@@ -517,7 +529,7 @@
             const displayTitle = currentFloor.endsWith('F') ? currentFloor.replace('F', '階') : currentFloor;
             document.getElementById('floor-title').innerText = `${displayTitle}の出店一覧`;
         }
-
+  
         function buildDayTabs() {
             const days = Array.from(new Set(timelineData.map(t => t.day))).sort((a,b) => a-b);
             const container = document.getElementById('day-tab-container');
@@ -530,7 +542,7 @@
         style = document.createElement('style');
         style.innerHTML = '.leaflet-popup-content { margin: 8px 12px !important; }';
         document.head.appendChild(style);
-
+  
         function initImageMap() {
             if (map) { map.remove(); }
             map = L.map('map', {
@@ -548,7 +560,7 @@
   
         function updateMapFloorImage() {
             if (currentImageLayer) { map.removeLayer(currentImageLayer); }
-            const imageUrl = MAP_IMAGES[currentFloor] || 'map1f.png';
+            const imageUrl = MAP_IMAGES\[currentFloor\] || 'map1f.png';
   
             currentImageLayer = L.imageOverlay(imageUrl, [[0, 0], [MAP_HEIGHT, MAP_WIDTH]]).addTo(map);
             map.setView([MAP_HEIGHT / 2, MAP_WIDTH / 2], -0.4); 
@@ -659,7 +671,6 @@
             }
         }
   
-        /* 🖼️ 修正ポイント：imageデータがある場合は正しく<img>タグを出し、ない場合はNO IMAGEを出す構造 */
         function renderShops() {
             const container = document.getElementById('shop-list-container');
             container.innerHTML = '';
@@ -675,8 +686,6 @@
                 let badgeEmoji = "🎨";
                 if(shop.genre === '食品販売') { genreClass = "genre-food"; badgeEmoji = "🍴"; }
                 else if(shop.genre === '体験・催し') { genreClass = "genre-play"; badgeEmoji = "🎮"; }
-  
-                // 画像判定ロジック
                 const imageHtml = shop.image ? `<img src="${shop.image}" alt="${shop.title}">` : 'NO IMAGE';
   
                 const card = document.createElement('div');
@@ -690,7 +699,7 @@
                     <div class="shop-details" id="details-${shop.id}">
                         <div class="logo-dummy">${imageHtml}</div>
                         <div>
-                            <span style="font-size:0.75rem; font-weight:bold; color:var(--primary);">📋 メニュー</span>
+                            <span style="font-size:0.75rem; font-weight:bold; color:var(--primary);">📋 メメニュー</span>
                             <div style="font-size:0.8rem; margin-bottom:8px; color:var(--text-main); white-space: pre-wrap;">${shop.menu}</div>
                             <button class="map-go-btn" onclick="panToCoordinates(${shop.x}, ${shop.y}, ${shop.id}, '${shop.floor}')"><i class="fa-solid fa-map"></i> マップ上で選択</button>
                         </div>
@@ -840,11 +849,9 @@
             syncCloudAndCheckAlert(); 
         }
   
-        /* 📲 クロスデバイス検証用の擬似コード生成 */
         function updateSyncCodeDisplay() {
             const raw = localStorage.getItem('festival_live_broadcast');
             if (raw) {
-                // 簡易的なBase64変換をしてコード化
                 document.getElementById('admin-sync-code').value = btoa(unescape(encodeURIComponent(raw)));
             }
         }
@@ -860,7 +867,7 @@
             if(!val) return alert("コードが空欄です");
             try {
                 const decoded = decodeURIComponent(escape(atob(val)));
-                JSON.parse(decoded); // 検証
+                JSON.parse(decoded); 
                 localStorage.setItem('festival_live_broadcast', decoded);
                 alert("手動同期が完了しました！通知を反映します。");
                 closeModal('modal-admin');
@@ -908,32 +915,32 @@
         function openModal(id) { toggleSidebar(); document.getElementById(id).classList.add('show'); }
         function closeModal(id) { document.getElementById(id).classList.remove('show'); }
         function closeModalOnOverlay(e, id) { if (e.target === document.getElementById(id)) closeModal(id); }
+
+        // 🔔 修正：ボタンクリックでブラウザ本物の［許可/ブロック］を強制起動する統合ロジック
+        function initNotificationButtonLogic() {
+            const notifyBtn = document.getElementById('change-notification-btn');
+            if (!notifyBtn) return;
+
+            notifyBtn.addEventListener('click', () => {
+                if (!('Notification' in window)) {
+                    alert('お使いのブラウザは通知機能に対応していません。別のブラウザでお試しください。');
+                    return;
+                }
+  
+                Notification.requestPermission().then((permission) => {
+                    if (permission === 'granted') {
+                        alert('ブラウザの設定で【許可】されました！ステージの遅延情報をお届けします。');
+                        closeModal('modal-push'); // 許可されたら設定画面を閉じる
+                    } else if (permission === 'denied') {
+                        alert('ブラウザの設定で【ブロック】されました。通知を受け取るには、アドレスバーの鍵マークやベルマーク（設定）からブロックを解除してください。');
+                    } else {
+                        alert('通知設定が変更されませんでした。');
+                    }
+                }).catch((error) => {
+                    console.error('通知のリクエスト中にエラーが発生しました:', error);
+                });
+            });
+        }
     </script>
-	<script>
-  const notifyBtn = document.getElementById('change-notification-btn');
-
-  // ボタンがクリックされたら、ブラウザ標準の「許可/ブロック」の選択肢を呼び出す
-  notifyBtn.addEventListener('click', () => {
-    
-    // ブラウザに通知機能があるかチェック
-    if (!('Notification' in window)) {
-      alert('お使いのブラウザは通知機能に対応していません。別のブラウザでお試しください。');
-      return;
-    }
-
-    // ブラウザ標準の「許可・ブロック」ポップアップを強制起動！
-    Notification.requestPermission().then((permission) => {
-      if (permission === 'granted') {
-        alert('ブラウザの設定で【許可】されました！ステージの遅延情報をお届けします。');
-      } else if (permission === 'denied') {
-        alert('ブラウザの設定で【ブロック】されました。通知を受け取るには、アドレスバーの鍵マークやベルマーク（設定）からブロックを解除してください。');
-      } else {
-        alert('通知設定が変更されませんでした。');
-      }
-    }).catch((error) => {
-      console.error('通知のリクエスト中にエラーが発生しました:', error);
-    });
-  });
-</script>
 </body>
 </html>
