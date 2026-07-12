@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>厚木王子高 文化祭アプリ</title>
+    <title>厚木王子 文化祭アプリ</title>
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <!-- FontAwesome -->
@@ -48,6 +48,17 @@
             height: 100vh;
             display: flex;
             flex-direction: column;
+        }
+        
+        /* 🔒 画像の長押し保存・コピーを徹底的に防止する設定 */
+        img, .leaflet-tile, .leaflet-image-layer {
+            -webkit-touch-callout: none;    /* iOSでの長押しメニューを禁止 */
+            -webkit-user-select: none;       /* テキスト・画像の選択禁止 */
+            -khtml-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            pointer-events: none;            /* タップやドラッグ等のイベントを無効化してドラッグ保存も防止 */
         }
         
         .app-main {
@@ -129,7 +140,48 @@
             z-index: 1000;
         }
         .app-title { font-size: 1.15rem; font-weight: bold; letter-spacing: 0.05em; cursor: pointer; user-select: none; }
+        
+        /* メニューボタンの親要素（吹き出し位置の基準） */
+        .menu-btn-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
         .menu-toggle-btn { background: none; border: none; color: white; font-size: 1.25rem; cursor: pointer; width: 40px; height: 40px; }
+  
+        /* 💬 【新機能】一回限りのメニューナビゲーション吹き出し */
+        .menu-hint-balloon {
+            position: absolute;
+            left: 48px;
+            white-space: nowrap;
+            background-color: var(--accent);
+            color: #ffffff;
+            font-size: 0.75rem;
+            font-weight: bold;
+            padding: 6px 10px;
+            border-radius: 6px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            z-index: 1005;
+            display: none; /* 初期状態は非表示（JSでコントロール） */
+            animation: bounceLeft 2s infinite ease-in-out;
+            cursor: pointer;
+        }
+        /* 吹き出しの左の三角の矢印 */
+        .menu-hint-balloon::before {
+            content: "";
+            position: absolute;
+            left: -6px;
+            top: 50%;
+            transform: translateY(-50%);
+            border-width: 6px 6px 6px 0;
+            border-style: solid;
+            border-color: transparent var(--accent) transparent transparent;
+        }
+        
+        @keyframes bounceLeft {
+            0%, 100% { transform: translateX(0); }
+            50% { transform: translateX(5px); }
+        }
   
         .menu-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 1001; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
         .menu-overlay.show { opacity: 1; pointer-events: auto; }
@@ -213,7 +265,6 @@
         .shop-details { display: none; padding: 0 14px 14px; border-top: 1px dashed var(--border); background: rgba(255,255,255,0.5); grid-template-columns: 85px 1fr; gap: 12px; padding-top: 14px; }
         .shop-details.open { display: grid; }
         .logo-dummy { width: 85px; height: 85px; background: #e5e7eb; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 0.65rem; color: #9ca3af; overflow: hidden; border: 1px solid #d1d5db; }
-        .logo-dummy img { width: 100%; height: 100%; object-fit: cover; }
         
         .map-go-btn { background: var(--primary); color: white; border: none; padding: 8px 12px; font-size: 0.75rem; font-weight: bold; border-radius: 4px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
         .map-go-btn i { color: white !important; font-size: 0.85rem; }
@@ -246,7 +297,6 @@
         .greeting-title { font-size: 0.85rem; font-weight: bold; color: var(--primary); margin-bottom: 4px; }
         .greeting-text { font-size: 0.8rem; line-height: 1.5; color: var(--text-main); white-space: pre-wrap; }
         
-        /* 📖 ガイド用テキストスタイル */
         .guide-box { background: #f1f5f9; border-radius: 6px; padding: 10px; margin-top: 10px; text-align: left; font-size: 0.8rem; color: var(--text-main); line-height: 1.5; }
         .guide-box strong { color: var(--primary); }
   
@@ -257,7 +307,6 @@
         .admin-btn.delay { background: #eab308; }
         .admin-btn.reset { background: #10b981; }
 
-        /* 🎛️ オンオフ切り替えバー設定 */
         .toggle-wrapper { display: flex; justify-content: space-between; align-items: center; margin-top: 20px; padding-top: 15px; border-top: 1px dashed var(--border); }
         .toggle-label { font-size: 0.9rem; font-weight: bold; color: var(--text-main); text-align: left; }
         .switch { position: relative; display: inline-block; width: 50px; height: 26px; }
@@ -268,7 +317,7 @@
         input:checked + .slider:before { transform: translateX(24px); }
     </style>
 </head>
-<body>
+<body oncontextmenu="return false;"> <!-- PC上での右クリックメニューも非表示に -->
   
     <div id="global-alert" class="alert-bar" style="display: none;">
         <div class="alert-content">
@@ -279,9 +328,15 @@
     </div>
   
     <header class="app-header">
-        <button class="menu-toggle-btn" onclick="toggleSidebar()">
-            <i class="fa-solid fa-bars"></i>
-        </button>
+        <div class="menu-btn-wrapper">
+            <button class="menu-toggle-btn" onclick="toggleSidebar()">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+            <!-- 💬 1回限りの誘導吹き出し -->
+            <div id="menu-hint" class="menu-hint-balloon" onclick="hideMenuHintAndOpenSidebar()">
+                ← 何か困ったことがあったら覗いてみてね
+            </div>
+        </div>
         <h1 class="app-title" onclick="handleAdminKnock()">厚木王子高 文化祭案内</h1>
         <div style="width: 40px;"></div>
     </header>
@@ -309,7 +364,6 @@
             <button onclick="openModal('modal-rules')"><i class="fa-solid fa-circle-exclamation"></i> お知らせとお願い</button>
             <button onclick="openModal('modal-push')"><i class="fa-solid fa-bell"></i> スマホ通知設定</button>
             
-            <!-- 📨 お問い合わせフォーム用ボタン（Googleフォーム連携） -->
             <button onclick="window.open('https://docs.google.com/forms/d/e/★ここにGoogleフォームのURLを入れてね★/viewform?usp=sf_link', '_blank')" style="color: #047857;">
                 <i class="fa-solid fa-envelope"></i> お問い合わせフォーム
             </button>
@@ -348,7 +402,6 @@
         </section>
     </main>
   
-    <!-- 🆕 ウェルカム文面をご指定通りに変更 -->
     <div id="modal-welcome-push" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -404,7 +457,6 @@
         </div>
     </div>
   
-    <!-- 🆕 通知のブロック解除・オフにする方法の案内を追加 -->
     <div id="modal-push" class="modal" onclick="closeModalOnOverlay(event, 'modal-push')">
         <div class="modal-content" style="text-align: center;">
             <div class="modal-header">
@@ -488,13 +540,13 @@
         };
   
         const shopData = [
-            { id: 1, floor: '1F', location: '新棟', title: '3-7：ポップコーン・わたあめ', genre: '食品販売', x: 103, y: 378, image: '', menu: 'なんと1クラスで二個も催しちゃってます！\nぜひ来てね！' },
-            { id: 2, floor: '2F', location: 'A棟', title: '2-7：喫茶 美和の館', genre: '食品販売', x: 410, y: 460, image: 'class-2-7.png', menu: '美味しいワッフルと飲み物を用意してお待ちしております！' },
-            { id: 3, floor: '1F', location: '新棟', title: '3-2：人形浄瑠璃部', genre: '展示・部活', x: 359, y: 460, image: '', menu: '伝統ある人形浄瑠璃 of 公演と人形展示中。' },
-            { id: 4, floor: '1F', location: '新棟', title: '商業科', genre: '展示・部活', x: 199, y: 347, image: '', menu: '商品開発や企業とのコラボレーションで作った作品の展示会です！' },
-            { id: 5, floor: '4F', location: 'A棟', title: '軽音楽部', genre: '体験・催し', x: 284, y: 474, image: '', menu: '軽音楽部元気はつらつにライブ中！！！きて！！！！！！！！' },
-            { id: 6, floor: '1F', location: '体育館', title: '体育館イベント', genre: '展示・部活', x: 808, y: 263, image: '', menu: 'ステージ発表や各部活のメインパフォーマンスを行います！' },
-            { id: 7, floor: '1F', location: '新棟', title: 'マーケティング部', genre: '展示・部活', x: 103, y: 300, image: '', menu: '企業＆王子高校によって生まれたパンを販売中 !!' }
+            { id: 1, floor: '1F', location: '新棟', title: '3-7：ポップコーン・わたあめ', genre: '食品販売', x: 103, y: 378, menu: 'なんと1クラスで二個も催しちゃってます！\nぜひ来てね！' },
+            { id: 2, floor: '2F', location: 'A棟', title: '2-7：喫茶 美和の館', genre: '食品販売', x: 410, y: 460, menu: '美味しいワッフルと飲み物を用意してお待ちしております！' },
+            { id: 3, floor: '1F', location: '新棟', title: '3-2：人形浄瑠璃部', genre: '展示・部活', x: 359, y: 460, menu: '伝統ある人形浄瑠璃 of 公演と人形展示中。' },
+            { id: 4, floor: '1F', location: '新棟', title: '商業科', genre: '展示・部活', x: 199, y: 347, menu: '商品開発や企業とのコラボレーションで作った作品の展示会です！' },
+            { id: 5, floor: '4F', location: 'A棟', title: '軽音楽部', genre: '体験・催し', x: 284, y: 474, menu: '軽音楽部元気はつらつにライブ中！！！きて！！！！！！！！' },
+            { id: 6, floor: '1F', location: '体育館', title: '体育館イベント', genre: '展示・部活', x: 808, y: 263, menu: 'ステージ発表や各部活のメインパフォーマンスを行います！' },
+            { id: 7, floor: '1F', location: '新棟', title: 'マーケティング部', genre: '展示・部活', x: 103, y: 300, menu: '企業＆王子高校によって生まれたパンを販売中 !!' }
         ];
   
         const facilityData = [
@@ -502,7 +554,6 @@
             { name: "2F トイレ", floor: "2F", x: 610, y: 545, icon: "🚻" }
         ];
   
-        // 🗓️ 【タイムスケジュール枠データ】
         let timeScheduleData = [
             { id: 1, day: 1, time: "10:00 - 11:00", name: "吹奏楽部：オープニング", delay: "0" },
             { id: 2, day: 1, time: "11:30 - 13:00", name: "軽音楽部：無敵ライブ", delay: "0" },
@@ -530,7 +581,7 @@
         let adminKnockCount = 0;
         let adminKnockTimeout;
         let currentActiveServerDelay = null;
-        let isInitialLoad = true; // 初回読み込みフラグ（0分検知用）
+        let isInitialLoad = true;
   
         const MAP_WIDTH = 1000;
         const MAP_HEIGHT = 800;
@@ -546,12 +597,29 @@
             buildAllShopsModalList();
             checkFirstAccessWelcome(); 
             initNotificationButtonLogic();
+            checkMenuHintBalloon(); // 💬 吹き出しチェック
             
             document.getElementById('notice-list-container').innerHTML = noticeData.map(d => `<li class="greeting-card"><b>${d.title}</b><span style="display:block;color:var(--text-sub);font-size:0.8rem;margin-top:4px;">${d.sub}</span></li>`).join('');
             
             setInterval(syncCloudAndCheckAlert, 2000);
             syncCloudAndCheckAlert(); 
         };
+
+        // 💬 吹き出しを1回限り表示するロジック
+        function checkMenuHintBalloon() {
+            const hasSeenHint = localStorage.getItem('menu_hint_balloon_seen');
+            if (!hasSeenHint) {
+                // 初回アクセス時のみ表示
+                document.getElementById('menu-hint').style.display = 'block';
+            }
+        }
+
+        // 💬 吹き出しをタップした時の動き（非表示化 ＋ メニューを開く）
+        function hideMenuHintAndOpenSidebar() {
+            localStorage.setItem('menu_hint_balloon_seen', 'true');
+            document.getElementById('menu-hint').style.display = 'none';
+            toggleSidebar();
+        }
 
         function initToggleState() {
             const savedState = localStorage.getItem('map_delay_display_enabled');
@@ -735,7 +803,6 @@
                 let badgeEmoji = "🎨";
                 if(shop.genre === '食品販売') { genreClass = "genre-food"; badgeEmoji = "🍴"; }
                 else if(shop.genre === '体験・催し') { genreClass = "genre-play"; badgeEmoji = "🎮"; }
-                const imageHtml = shop.image ? `<img src="${shop.image}" alt="${shop.title}">` : 'NO IMAGE';
   
                 const card = document.createElement('div');
                 card.className = `shop-card-wrapper ${genreClass}`;
@@ -746,7 +813,8 @@
                         <i class="fa-solid fa-chevron-down" style="color:#9ca3af;"></i>
                     </div>
                     <div class="shop-details" id="details-${shop.id}">
-                        <div class="logo-dummy">${imageHtml}</div>
+                        <!-- 画像ロゴダミー枠（CSS適用により長押し不可） -->
+                        <div class="logo-dummy">NO IMAGE</div>
                         <div>
                             <span style="font-size:0.75rem; font-weight:bold; color:var(--primary);">📋 メニュー</span>
                             <div style="font-size:0.8rem; margin-bottom:8px; color:var(--text-main); white-space: pre-wrap;">${shop.menu}</div>
@@ -834,7 +902,6 @@
             });
         }
 
-        // ⏱️ 予定開始時刻を勝手に計算して出す便利関数
         function calculateNewStartTime(originalTimeRange, delayStr) {
             if (!delayStr || delayStr === "0" || delayStr === "通常進行") return "";
             
@@ -1002,7 +1069,6 @@
             });
         }
   
-        // 🔁 【受信側】自動チェック（利用者に優しく、0分遅れ＆初期読み込みのポップアップを完全ブロック）
         function syncCloudAndCheckAlert() {
             fetch(FIREBASE_DB_URL)
             .then(response => {
@@ -1025,11 +1091,9 @@
                             localStorage.removeItem('alert_bar_hidden_by_user');
                             refreshGlobalAlertBarDisplay();
   
-                            // 🛑 【重要】初期読み込み中、または遅延が「0（通常）」の場合はポップアップ通知を出さない
                             if (!isInitialLoad && data.delay !== "0") {
                                 const lastSeenPopupKey = `popup_seen_${data.target}_${data.delay}_${data.timestamp}`;
                                 if (!localStorage.getItem(lastSeenPopupKey)) {
-                                    // 📢 利用者向け通知から「〇日目」を完全排除しスマートに！
                                     const msg = `【進行変更】\n「${data.target}」に、現在【${data.delay}】の遅れが発生しています！`;
                                     
                                     document.getElementById('sync-alert-text').innerText = msg;
@@ -1037,13 +1101,11 @@
                                     localStorage.setItem(lastSeenPopupKey, 'true'); 
                                 }
                             }
-                            
-                            // 復旧連絡ポップアップも今回はカット（タイムライン表示変更のみで十分なため）
                         }
                     }
                 });
 
-                isInitialLoad = false; // 初回チェック完了フラグを落とす
+                isInitialLoad = false;
                 refreshGlobalAlertBarDisplay();
             })
             .catch(err => {
@@ -1063,7 +1125,6 @@
             if (!toggleEnabled || isUserHidden || !hasDelay) {
                 alertBar.style.display = 'none';
             } else {
-                // 上部固定バーの表示テキストからも「〇日目」を除去して利用者に分かりやすく！
                 document.getElementById('alert-message').innerText = `遅延発生: ${currentActiveServerDelay.target} (${currentActiveServerDelay.delay}遅れ)`;
                 alertBar.style.display = 'flex';
             }
@@ -1080,7 +1141,14 @@
             document.getElementById('global-alert').style.display = 'none'; 
         }
 
-        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); document.getElementById('menu-overlay').classList.toggle('show'); }
+        function toggleSidebar() { 
+            // 🎬 メニューを開いたタイミングで、吹き出しの既読フラグを立てて非表示にする
+            localStorage.setItem('menu_hint_balloon_seen', 'true');
+            document.getElementById('menu-hint').style.display = 'none';
+
+            document.getElementById('sidebar').classList.toggle('open'); 
+            document.getElementById('menu-overlay').classList.toggle('show'); 
+        }
         function openModal(id) { toggleSidebar(); document.getElementById(id).classList.add('show'); }
         function closeModal(id) { document.getElementById(id).classList.remove('show'); }
         function closeModalOnOverlay(e, id) { if (e.target === document.getElementById(id)) closeModal(id); }
