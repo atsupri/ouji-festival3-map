@@ -165,7 +165,7 @@
   
         /* 📍 ピンの透明度設定 */
         .custom-pin-icon { display: flex; align-items: center; justify-content: center; }
-        .pin-dot { width: 16px; height: 16px; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.2); border: 2px solid white; transition: all 0.2s ease; opacity: 0.55; } /* 👀 通常時は文字が見えやすいよう半透明 */
+        .pin-dot { width: 16px; height: 16px; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.2); border: 2px solid white; transition: all 0.2s ease; opacity: 0.55; }
         
         .pin-dot.pin-food { background: #fca5a5; border-color: #ef4444; }
         .pin-dot.pin-exhibit { background: #86efac; border-color: #22c55e; }
@@ -260,7 +260,6 @@
 </head>
 <body>
   
-    <!-- 🚨 修正：地図の上の警告バーに「確認しました」ボタンを設置 -->
     <div id="global-alert" class="alert-bar" style="display: none;">
         <div class="alert-content">
             <i class="fa-solid fa-triangle-exclamation"></i>
@@ -305,7 +304,7 @@
     <main class="app-main">
         <section id="map-page" class="app-page active">
             <div id="map-container">
-                <div id="map vectors"></div>
+                <div id="map"></div>
             </div>
             
             <div class="scrollable-content">
@@ -380,7 +379,6 @@
         </div>
     </div>
   
-    <!-- 🔔 修正：中央のポップアップの確認ボタン -->
     <div id="modal-sync-alert" class="modal" onclick="closeModalOnOverlay(event, 'modal-sync-alert')">
         <div class="modal-content" style="border:2px solid var(--accent);">
             <div class="modal-header">
@@ -392,7 +390,6 @@
         </div>
     </div>
   
-    <!-- 🔔 修正：メニューのプッシュ通知設定画面をスマートに完全刷新（米印撤去、本物ポップアップ連動） -->
     <div id="modal-push" class="modal" onclick="closeModalOnOverlay(event, 'modal-push')">
         <div class="modal-content" style="text-align: center;">
             <div class="modal-header">
@@ -454,7 +451,7 @@
         const shopData = [
             { id: 1, floor: '1F', location: '新棟', title: '3-7：ポップコーン・わたあめ', genre: '食品販売', x: 103, y: 378, image: '', menu: 'なんと1クラスで二個も催しちゃってます！\nぜひ来てね！' },
             { id: 2, floor: '2F', location: 'A棟', title: '2-7：喫茶 美和の館', genre: '食品販売', x: 410, y: 460, image: 'class-2-7.png', menu: '美味しいワッフルと飲み物を用意してお待ちしております！' },
-            { id: 3, floor: '1F', location: '新棟', title: '3-2：人形浄瑠璃部', genre: '展示・部活', x: 359, y: 460, image: '', menu: '伝統ある人形浄瑠璃 of 公演と人形展示中。' },
+            { id: 3, floor: '1F', location: '新棟', title: '3-2：人形浄瑠璃部', genre: '展示・部活', x: 359, y: 460, image: '', menu: '伝統ある人形浄瑠璃の公演と人形展示中。' },
             { id: 4, floor: '1F', location: '新棟', title: '商業科', genre: '展示・部活', x: 199, y: 347, image: '', menu: '商品開発や企業とのコラボレーションで作った作品の展示会です！' },
             { id: 5, floor: '4F', location: 'A棟', title: '軽音楽部', genre: '体験・催し', x: 284, y: 474, image: '', menu: '軽音楽部元気はつらつにライブ中！！！きて！！！！！！！！' },
             { id: 6, floor: '1F', location: '体育館', title: '体育館イベント', genre: '展示・部活', x: 808, y: 263, image: '', menu: 'ステージ発表や各部活のメインパフォーマンスを行います！' },
@@ -462,7 +459,7 @@
         ];
   
         const facilityData = [
-            { name: "事務室・AED",floor: "1F", x: 200, y: 200, icon: "🚑" },
+            { name: "事務室・AED", floor: "1F", x: 200, y: 200, icon: "🚑" },
             { name: "2F トイレ", floor: "2F", x: 610, y: 545, icon: "🚻" }
         ];
   
@@ -506,7 +503,7 @@
             buildAllShopsModalList();
             checkFirstAccessWelcome(); 
             updateSyncCodeDisplay();
-            initNotificationButtonLogic(); // 通知ボタン連動ロジックの起動
+            initNotificationButtonLogic();
             
             document.getElementById('notice-list-container').innerHTML = noticeData.map(d => `<li class="greeting-card"><b>${d.title}</b><span style="display:block;color:var(--text-sub);font-size:0.8rem;margin-top:4px;">${d.sub}</span></li>`).join('');
             
@@ -560,7 +557,7 @@
   
         function updateMapFloorImage() {
             if (currentImageLayer) { map.removeLayer(currentImageLayer); }
-            const imageUrl = MAP_IMAGES\[currentFloor\] || 'map1f.png';
+            const imageUrl = MAP_IMAGES[currentFloor] || 'map1f.png'; // 修正箇所（バックスラッシュを撤去）
   
             currentImageLayer = L.imageOverlay(imageUrl, [[0, 0], [MAP_HEIGHT, MAP_WIDTH]]).addTo(map);
             map.setView([MAP_HEIGHT / 2, MAP_WIDTH / 2], -0.4); 
@@ -699,7 +696,7 @@
                     <div class="shop-details" id="details-${shop.id}">
                         <div class="logo-dummy">${imageHtml}</div>
                         <div>
-                            <span style="font-size:0.75rem; font-weight:bold; color:var(--primary);">📋 メメニュー</span>
+                            <span style="font-size:0.75rem; font-weight:bold; color:var(--primary);">📋 メニュー</span>
                             <div style="font-size:0.8rem; margin-bottom:8px; color:var(--text-main); white-space: pre-wrap;">${shop.menu}</div>
                             <button class="map-go-btn" onclick="panToCoordinates(${shop.x}, ${shop.y}, ${shop.id}, '${shop.floor}')"><i class="fa-solid fa-map"></i> マップ上で選択</button>
                         </div>
@@ -916,7 +913,6 @@
         function closeModal(id) { document.getElementById(id).classList.remove('show'); }
         function closeModalOnOverlay(e, id) { if (e.target === document.getElementById(id)) closeModal(id); }
 
-        // 🔔 修正：ボタンクリックでブラウザ本物の［許可/ブロック］を強制起動する統合ロジック
         function initNotificationButtonLogic() {
             const notifyBtn = document.getElementById('change-notification-btn');
             if (!notifyBtn) return;
@@ -930,7 +926,7 @@
                 Notification.requestPermission().then((permission) => {
                     if (permission === 'granted') {
                         alert('ブラウザの設定で【許可】されました！ステージの遅延情報をお届けします。');
-                        closeModal('modal-push'); // 許可されたら設定画面を閉じる
+                        closeModal('modal-push'); 
                     } else if (permission === 'denied') {
                         alert('ブラウザの設定で【ブロック】されました。通知を受け取るには、アドレスバーの鍵マークやベルマーク（設定）からブロックを解除してください。');
                     } else {
