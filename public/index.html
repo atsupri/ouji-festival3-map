@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>厚木王子高 文化祭アプリ</title>
+    <title>厚木王子 文化祭アプリ</title>
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <!-- FontAwesome -->
@@ -18,21 +18,25 @@
             --text-sub: #6b7280;
             --bg-light: #f9fafb;
             --border: #e5e7eb;
-  
-            /* 🎨 ジャンル別・カラーテーマ */
+
+            /* 🎨 ジャンル別・カラーテーマ（メニュー用・淡い背景） */
             --color-food-bg: #fef2f2;       /* 淡い赤 */
             --color-food-border: #fca5a5;
             --color-food-text: #b91c1c;
+            --color-food-dot: #ef4444;       /* ピンと同色 */
             
             --color-exhibit-bg: #f0fdf4;    /* 淡い緑 */
             --color-exhibit-border: #86efac;
             --color-exhibit-text: #166534;
+            --color-exhibit-dot: #22c55e;    /* ピンと同色 */
             
             --color-play-bg: #fef9c3;       /* 淡い黄 */
             --color-play-border: #fde047;
             --color-play-text: #854d0e;
+            --color-play-dot: #eab308;       /* ピンと同色 */
         }
         * {
+            box-shadow: none;
             box-sizing: border-box;
             margin: 0;
             padding: 0;
@@ -94,7 +98,7 @@
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
         }
-  
+
         /* 🚨 地図の上の遅延バー */
         .alert-bar {
             position: fixed;
@@ -124,7 +128,7 @@
             cursor: pointer;
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
-  
+
         .app-header {
             position: fixed;
             top: 0;
@@ -148,8 +152,8 @@
             align-items: center;
         }
         .menu-toggle-btn { background: none; border: none; color: white; font-size: 1.25rem; cursor: pointer; width: 40px; height: 40px; }
-  
-        /* 💬 【新機能】一回限りのメニューナビゲーション吹き出し */
+
+        /* 💬 一回限りのメニューナビゲーション吹き出し */
         .menu-hint-balloon {
             position: absolute;
             left: 48px;
@@ -162,7 +166,7 @@
             border-radius: 6px;
             box-shadow: 0 4px 10px rgba(0,0,0,0.2);
             z-index: 1005;
-            display: none; /* 初期状態は非表示（JSでコントロール） */
+            display: none; 
             animation: bounceLeft 2s infinite ease-in-out;
             cursor: pointer;
         }
@@ -182,7 +186,7 @@
             0%, 100% { transform: translateX(0); }
             50% { transform: translateX(5px); }
         }
-  
+
         .menu-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 1001; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
         .menu-overlay.show { opacity: 1; pointer-events: auto; }
         .app-sidebar { position: fixed; top: 0; left: -300px; width: 300px; height: 100%; background: white; z-index: 1002; transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 4px 0 10px rgba(0,0,0,0.1); padding: 20px; display: flex; flex-direction: column; overflow-y: auto; }
@@ -190,36 +194,39 @@
         .sidebar-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 12px; margin-bottom: 12px; }
         .sidebar-header h2 { font-size: 1.05rem; color: var(--primary); }
         .sidebar-close-btn { background: none; border: none; font-size: 1.5rem; color: var(--text-sub); cursor: pointer; }
-  
+
         .sidebar-search-section { border-bottom: 1px solid var(--border); padding-bottom: 12px; margin-bottom: 10px; }
         .search-bar-wrapper { position: relative; }
         .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-sub); font-size: 0.9rem; }
         #sidebar-search-box { width: 100%; padding: 10px 12px 10px 36px; border: 1px solid var(--border); border-radius: 8px; font-size: 0.85rem; background: #f3f4f6; outline: none; }
         
         .sidebar-results-list { max-height: 200px; overflow-y: auto; margin-top: 8px; display: flex; flex-direction: column; gap: 4px; }
-        .sidebar-result-item { background: #f9fafb; border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px; cursor: pointer; text-align: left; }
+        .sidebar-result-item { border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px; cursor: pointer; text-align: left; background: #ffffff; }
+        
+        /* メニュー一覧用カラー背景（維持） */
         .sidebar-result-item.genre-food { background: var(--color-food-bg); border-color: var(--color-food-border); }
         .sidebar-result-item.genre-exhibit { background: var(--color-exhibit-bg); border-color: var(--color-exhibit-border); }
         .sidebar-result-item.genre-play { background: var(--color-play-bg); border-color: var(--color-play-border); }
+        
         .sidebar-result-floor { font-size: 0.65rem; font-weight: bold; background: rgba(255,255,255,0.8); border: 1px solid rgba(0,0,0,0.1); padding: 2px 4px; border-radius: 3px; margin-right: 6px; }
         .sidebar-result-title { font-size: 0.8rem; font-weight: bold; color: var(--text-main); }
-  
+
         .sidebar-nav button { width: 100%; background: none; border: none; text-align: left; padding: 10px 12px; font-size: 0.9rem; font-weight: 500; display: flex; align-items: center; gap: 12px; border-radius: 6px; cursor: pointer; color: var(--text-main); margin-bottom: 4px; }
         .sidebar-nav button:active { background: var(--primary-light); color: var(--primary); }
         .sidebar-divider { font-size: 0.75rem; font-weight: bold; color: var(--text-sub); margin: 14px 0 6px 4px; }
-  
+
         .leaflet-top.leaflet-left { top: 10px !important; }
         .leaflet-popup-content-wrapper { border-radius: 8px !important; padding: 2px 4px !important; }
         .popup-location { font-size: 0.65rem; font-weight: bold; color: var(--text-sub); }
         .popup-title { font-size: 0.8rem; font-weight: bold; color: var(--text-main); margin-bottom: 4px; }
-  
+
         /* 📍 ピンの透明度設定 */
         .custom-pin-icon { display: flex; align-items: center; justify-content: center; }
         .pin-dot { width: 16px; height: 16px; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.2); border: 2px solid white; transition: all 0.2s ease; opacity: 0.55; }
         
-        .pin-dot.pin-food { background: #fca5a5; border-color: #ef4444; }
-        .pin-dot.pin-exhibit { background: #86efac; border-color: #22c55e; }
-        .pin-dot.pin-dot-play { background: #fde047; border-color: #eab308; }
+        .pin-dot.pin-food { background: var(--color-food-dot); border-color: #b91c1c; }
+        .pin-dot.pin-exhibit { background: var(--color-exhibit-dot); border-color: #166534; }
+        .pin-dot.pin-dot-play { background: var(--color-play-dot); border-color: #854d0e; }
         
         /* ✨ 選択されたピン */
         .pin-dot.selected {
@@ -229,10 +236,10 @@
             border-width: 1.5px;
             z-index: 9999 !important;
         }
-  
+
         .pin-square { width: 22px; height: 22px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; background: white; border: 2px solid #3b82f6; box-shadow: 0 2px 4px rgba(0,0,0,0.2); opacity: 0.6; }
         .pin-square.selected { opacity: 1.0 !important; transform: scale(1.3); }
-  
+
         .sticky-map-controls { position: sticky; top: 0; z-index: 998; background: white; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         
         .tab-container { display: flex; padding: 6px; gap: 6px; overflow-x: auto; -webkit-overflow-scrolling: touch; touch-action: pan-x; }
@@ -247,59 +254,82 @@
         .tag-btn.active-food { background: var(--color-food-bg); color: var(--color-food-text); border-color: var(--color-food-text); }
         .tag-btn.active-exhibit { background: var(--color-exhibit-bg); color: var(--color-exhibit-text); border-color: var(--color-exhibit-text); }
         .tag-btn.active-play { background: var(--color-play-bg); color: var(--color-play-text); border-color: var(--color-play-text); }
-  
+
         .section-title { font-size: 0.95rem; font-weight: bold; padding: 14px 16px 6px; color: var(--text-sub); border-bottom: 2px solid var(--border); margin: 0 16px 10px; padding-left: 0; }
         .shop-list { padding: 0 16px 16px; }
         
-        .shop-card-wrapper { border: 1px solid var(--border); border-radius: 10px; margin-bottom: 8px; overflow: hidden; background: white; }
-        .shop-card-wrapper.genre-food { background: var(--color-food-bg); border-color: var(--color-food-border); }
-        .shop-card-wrapper.genre-exhibit { background: var(--color-exhibit-bg); border-color: var(--color-exhibit-border); }
-        .shop-card-wrapper.genre-play { background: var(--color-play-bg); border-color: var(--color-play-border); }
+        /* 🗺️ 校内マップ側の店舗カードデザイン：背景白（ノーマル）へ統一、丸丸バッジ配置 */
+        .shop-card-wrapper { border: 1px solid var(--border); border-radius: 10px; margin-bottom: 8px; overflow: hidden; background: #ffffff; }
+        
+        /* バッジ用のカラー丸ぽち（●） */
+        .genre-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 5px;
+            vertical-align: middle;
+        }
+        .genre-dot.dot-food { background-color: var(--color-food-dot); }
+        .genre-dot.dot-exhibit { background-color: var(--color-exhibit-dot); }
+        .genre-dot.dot-play { background-color: var(--color-play-dot); }
         
         .shop-card { padding: 14px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; }
-        .shop-loc { background: rgba(255,255,255,0.8); border: 1px solid rgba(0,0,0,0.1); color: var(--text-main); font-size: 0.75rem; font-weight: bold; padding: 3px 6px; border-radius: 4px; margin-right: 12px; }
+        .shop-loc { background: #f3f4f6; border: 1px solid rgba(0,0,0,0.1); color: var(--text-main); font-size: 0.75rem; font-weight: bold; padding: 3px 6px; border-radius: 4px; margin-right: 12px; }
         .shop-title { flex: 1; font-weight: bold; font-size: 0.9rem; display: flex; flex-direction: column; gap: 2px; color: var(--text-main); }
-        .shop-genre { font-size: 0.75rem; color: var(--text-sub); margin-top: 1px; }
+        .shop-genre { font-size: 0.75rem; color: var(--text-sub); margin-top: 1px; display: flex; align-items: center; }
         
         /* 🖼️ 店舗詳細 */
-        .shop-details { display: none; padding: 0 14px 14px; border-top: 1px dashed var(--border); background: rgba(255,255,255,0.5); grid-template-columns: 85px 1fr; gap: 12px; padding-top: 14px; }
+        .shop-details { display: none; padding: 0 14px 14px; border-top: 1px dashed var(--border); background: #fafafa; grid-template-columns: 85px 1fr; gap: 12px; padding-top: 14px; }
         .shop-details.open { display: grid; }
-        .logo-dummy { width: 85px; height: 85px; background: #e5e7eb; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 0.65rem; color: #9ca3af; overflow: hidden; border: 1px solid #d1d5db; }
+        .logo-dummy { width: 85px; height: 85px; background: #e5e7eb; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 0.65rem; color: #9ca3af; overflow: hidden; border: 1px solid #d1d5db; position: relative; }
         
         .map-go-btn { background: var(--primary); color: white; border: none; padding: 8px 12px; font-size: 0.75rem; font-weight: bold; border-radius: 4px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
         .map-go-btn i { color: white !important; font-size: 0.85rem; }
-  
+
         .day-selector { display: flex; background: white; border-bottom: 1px solid var(--border); padding: 8px 16px; gap: 8px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
         .day-btn { flex: 1; flex-shrink: 0; min-width: 140px; border: 1px solid var(--border); background: white; padding: 8px 0; font-size: 0.85rem; font-weight: bold; border-radius: 6px; cursor: pointer; }
         .day-btn.active { background: #374151; color: white; }
         .timeline-wrapper { padding: 20px 16px; }
         .time-slot { background: white; border: 1px solid var(--border); border-left: 4px solid var(--primary); padding: 14px; border-radius: 0 8px 8px 0; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
-        .time-slot.status-delayed { border-left-color: #eab308; background: #fffbeb; }
+        .time-slot.status-delayed { border-left-color: #dc2626; background: #fffbeb; }
+        .time-slot.status-chain-delayed { border-left-color: #eab308; background: #fffdf5; } /* 連鎖遅延用 */
+        
         .time-text { font-size: 0.75rem; font-weight: bold; color: var(--text-sub); }
         .band-name { font-weight: bold; font-size: 0.95rem; }
         .band-status { font-size: 0.75rem; font-weight: bold; color: #10b981; }
-        .band-status.delayed { color: #b45309; }
+        .band-status.delayed { color: #dc2626; }
+        .band-status.chain-delayed { color: #d97706; }
+        
         .delayed-time-calc { display: block; font-size: 0.8rem; color: #dc2626; font-weight: bold; margin-top: 2px; }
-        .fav-btn { background: none; border: none; font-size: 1.35rem; color: #d1d5db; cursor: pointer; }
+        .fav-btn { background: none; border: none; font-size: 1.35rem; color: #d1d5db; cursor: pointer; padding: 4px 8px; }
         .fav-btn.active { color: #f59e0b; }
-  
+
         .app-footer { position: fixed; bottom: 0; left: 0; width: 100%; height: 60px; background: white; border-top: 1px solid var(--border); display: flex; z-index: 1000; }
         .page-tab-btn { flex: 1; background: none; border: none; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-sub); font-size: 0.7rem; }
         .page-tab-btn i { font-size: 1.2rem; margin-bottom: 4px; }
         .page-tab-btn.active { color: var(--primary); font-weight: bold; }
-  
+
         .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 20px; opacity: 0; pointer-events: none; transition: opacity 0.2s ease; }
         .modal.show { opacity: 1; pointer-events: auto; }
         .modal-content { background: white; border-radius: 12px; width: 100%; max-width: 400px; max-height: 80%; display: flex; flex-direction: column; padding: 20px; overflow-y: auto; }
         .modal-header { padding-bottom: 12px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .modal-header h3 { font-size: 1.05rem; font-weight: bold; color: var(--text-main); }
+        .modal-header button { background: none; border: none; font-size: 1.5rem; color: var(--text-sub); cursor: pointer; }
         
         .greeting-card { background: #f8fafc; border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-bottom: 12px; }
         .greeting-title { font-size: 0.85rem; font-weight: bold; color: var(--primary); margin-bottom: 4px; }
         .greeting-text { font-size: 0.8rem; line-height: 1.5; color: var(--text-main); white-space: pre-wrap; }
         
+        /* 🆕 刷新されたモダンな通知用デザインパーツ */
+        .modern-feature-box { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 14px; margin: 12px 0; text-align: left; }
+        .modern-feature-item { display: flex; align-items: flex-start; gap: 10px; font-size: 0.85rem; color: #166534; line-height: 1.5; margin-bottom: 8px; }
+        .modern-feature-item:last-child { margin-bottom: 0; }
+        .modern-feature-item i { color: #22c55e; margin-top: 3px; font-size: 0.9rem; }
+
         .guide-box { background: #f1f5f9; border-radius: 6px; padding: 10px; margin-top: 10px; text-align: left; font-size: 0.8rem; color: var(--text-main); line-height: 1.5; }
         .guide-box strong { color: var(--primary); }
-  
+
         .admin-panel label { font-weight: bold; display: block; margin-top: 12px; font-size: 0.9rem; }
         .admin-panel select, .admin-panel input { width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #d1d5db; margin-top: 5px; font-size: 0.85rem; }
         .admin-buttons { display: flex; flex-direction: column; gap: 8px; margin-top: 15px; }
@@ -309,7 +339,7 @@
 
         .toggle-wrapper { display: flex; justify-content: space-between; align-items: center; margin-top: 20px; padding-top: 15px; border-top: 1px dashed var(--border); }
         .toggle-label { font-size: 0.9rem; font-weight: bold; color: var(--text-main); text-align: left; }
-        .switch { position: relative; display: inline-block; width: 50px; height: 26px; }
+        .switch { position: relative; display: inline-block; width: 50px; height: 26px; flex-shrink: 0; }
         .switch input { opacity: 0; width: 0; height: 0; }
         .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .3s; border-radius: 34px; }
         .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 4px; bottom: 4px; background-color: white; transition: .3s; border-radius: 50%; }
@@ -317,8 +347,8 @@
         input:checked + .slider:before { transform: translateX(24px); }
     </style>
 </head>
-<body oncontextmenu="return false;"> <!-- PC上での右クリックメニューも非表示に -->
-  
+<body oncontextmenu="return false;">
+
     <div id="global-alert" class="alert-bar" style="display: none;">
         <div class="alert-content">
             <i class="fa-solid fa-triangle-exclamation"></i>
@@ -326,7 +356,7 @@
         </div>
         <button class="alert-confirm-btn" onclick="closeAlertBar()">確認しました</button>
     </div>
-  
+
     <header class="app-header">
         <div class="menu-btn-wrapper">
             <button class="menu-toggle-btn" onclick="toggleSidebar()">
@@ -340,7 +370,7 @@
         <h1 class="app-title" onclick="handleAdminKnock()">厚木王子高 文化祭案内</h1>
         <div style="width: 40px;"></div>
     </header>
-  
+
     <div id="menu-overlay" class="menu-overlay" onclick="toggleSidebar()"></div>
     <aside id="sidebar" class="app-sidebar">
         <div class="sidebar-header">
@@ -369,7 +399,7 @@
             </button>
         </nav>
     </aside>
-  
+
     <main class="app-main">
         <section id="map-page" class="app-page active">
             <div id="map-container">
@@ -385,15 +415,15 @@
                     <div class="tag-container">
                         <button id="tag-all" class="tag-btn active-all" onclick="filterTag('すべて', this)">全て</button>
                         <button id="tag-food" class="tag-btn" onclick="filterTag('食品販売', this)">🍴 食品販売</button>
-                        <button id="tag-exhibit" class="tag-btn" onclick="filterTag('展示・部活', this)">🎨 展示・部活</button>
-                        <button id="tag-play" class="tag-btn" onclick="filterTag('体験・催し', this)">🎮 体験・催し</button>
+                        <button id="tag-exhibit" class="tag-btn" onclick="filterTag('展示・発表', this)">🎨 展示・発表</button>
+                        <button id="tag-play" class="tag-btn" onclick="filterTag('体験・アトラクション', this)">🎮 体験・アトラクション</button>
                     </div>
                 </div>
                 <h3 id="floor-title" class="section-title">1Fの出店一覧</h3>
                 <div id="shop-list-container" class="shop-list"></div>
             </div>
         </section>
-  
+
         <section id="timeline-page" class="app-page">
             <div id="day-tab-container" class="day-selector"></div>
             <div class="scrollable-content" style="padding-top:10px;">
@@ -401,14 +431,26 @@
             </div>
         </section>
     </main>
-  
+
+    <!-- 🆕 初回案内モーダル（スッキリと見やすい現代的デザインへ刷新） -->
     <div id="modal-welcome-push" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>🔔 通知設定のお願い</h3>
+                <h3>🔔 ステージ遅延通知のご案内</h3>
             </div>
-            <p style="font-size: 0.85rem; line-height: 1.6; margin-bottom: 15px; color: var(--text-main); white-space: pre-wrap;">厚木王子文化祭案内ちゃんへようこそ！
-まず初めに、体育館で行われるステージの遅延通知を受け取りたい方は通知設定を「許可」してください。設定の仕方は左上のメニュー（三本線）からスマホ通知設定を参考にしてください。</p>
+            <div class="modern-feature-box">
+                <div class="modern-feature-item">
+                    <i class="fa-solid fa-circle-check"></i>
+                    <span><strong>お気に入り限定でお知らせ！</strong><br>タイムスケジュールで星（★）を付けたお気に入りステージの遅延情報だけをピンポイントでお届けします。</span>
+                </div>
+                <div class="modern-feature-item">
+                    <i class="fa-solid fa-circle-check"></i>
+                    <span><strong>連鎖的な影響も先回り警告！</strong><br>前の演目が10分以上遅れた場合、後ろのステージにも自動的に影響警告を表示します。</span>
+                </div>
+            </div>
+            <p style="font-size: 0.8rem; line-height: 1.6; margin-bottom: 15px; color: var(--text-sub);">
+                リアルタイムに遅延情報を受け取りたい方は、通知の変更画面から「許可」をタップしてください。詳しい手順はメニュー内の「スマホ通知設定」からいつでも確認できます。
+            </p>
             <button style="width:100%; padding:12px; background:var(--primary); color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer;" onclick="closeWelcomeModal()">確認して閉じる</button>
         </div>
     </div>
@@ -422,7 +464,7 @@
             <div id="all-shops-modal-container" style="overflow-y: auto; display: flex; flex-direction: column; gap: 8px;"></div>
         </div>
     </div>
-  
+
     <div id="modal-greeting" class="modal" onclick="closeModalOnOverlay(event, 'modal-greeting')">
         <div class="modal-content">
             <div class="modal-header">
@@ -435,7 +477,7 @@
             </div>
         </div>
     </div>
-  
+
     <div id="modal-rules" class="modal" onclick="closeModalOnOverlay(event, 'modal-rules')">
         <div class="modal-content">
             <div class="modal-header">
@@ -445,7 +487,7 @@
             <ul id="notice-list-container" style="list-style: none; font-size: 0.9rem;"></ul>
         </div>
     </div>
-  
+
     <div id="modal-sync-alert" class="modal" onclick="closeModalOnOverlay(event, 'modal-sync-alert')">
         <div class="modal-content" style="border:2px solid var(--accent);">
             <div class="modal-header">
@@ -456,7 +498,7 @@
             <button style="width:100%; padding:10px; background:var(--text-main); color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer;" onclick="closeModal('modal-sync-alert')">確認しました</button>
         </div>
     </div>
-  
+
     <div id="modal-push" class="modal" onclick="closeModalOnOverlay(event, 'modal-push')">
         <div class="modal-content" style="text-align: center;">
             <div class="modal-header">
@@ -488,7 +530,7 @@
             </div>
         </div>
     </div>
-  
+
     <div id="modal-admin" class="modal" onclick="closeModalOnOverlay(event, 'modal-admin')">
         <div class="modal-content admin-panel">
             <div class="modal-header">
@@ -518,12 +560,12 @@
             </div>
         </div>
     </div>
-  
+
     <footer class="app-footer">
         <button class="page-tab-btn active" onclick="switchPage('map-page')"><i class="fa-solid fa-map-location-dot"></i><span>校内マップ</span></button>
         <button class="page-tab-btn" onclick="switchPage('timeline-page')"><i class="fa-solid fa-clock"></i><span>タイムスケジュール</span></button>
     </footer>
-  
+
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     
     <script>
@@ -538,34 +580,94 @@
             '3F': 'map3f.png',
             '4F': 'map4f.png'
         };
-  
+
         const shopData = [
-            { id: 1, floor: '1F', location: '新棟', title: '3-7：ポップコーン・わたあめ', genre: '食品販売', x: 103, y: 378, menu: 'なんと1クラスで二個も催しちゃってます！\nぜひ来てね！' },
-            { id: 2, floor: '2F', location: 'A棟', title: '2-7：喫茶 美和の館', genre: '食品販売', x: 410, y: 460, menu: '美味しいワッフルと飲み物を用意してお待ちしております！' },
-            { id: 3, floor: '1F', location: '新棟', title: '3-2：人形浄瑠璃部', genre: '展示・部活', x: 359, y: 460, menu: '伝統ある人形浄瑠璃 of 公演と人形展示中。' },
-            { id: 4, floor: '1F', location: '新棟', title: '商業科', genre: '展示・部活', x: 199, y: 347, menu: '商品開発や企業とのコラボレーションで作った作品の展示会です！' },
-            { id: 5, floor: '4F', location: 'A棟', title: '軽音楽部', genre: '体験・催し', x: 284, y: 474, menu: '軽音楽部元気はつらつにライブ中！！！きて！！！！！！！！' },
-            { id: 6, floor: '1F', location: '体育館', title: '体育館イベント', genre: '展示・部活', x: 808, y: 263, menu: 'ステージ発表や各部活のメインパフォーマンスを行います！' },
-            { id: 7, floor: '1F', location: '新棟', title: 'マーケティング部', genre: '展示・部活', x: 103, y: 300, menu: '企業＆王子高校によって生まれたパンを販売中 !!' }
+            // --- 1年生 クラス企画 ---
+            { id: 8, floor: '3F', location: 'A棟', title: '1-1：ギャルカフェ', genre: '体験・アトラクション', x: 150, y: 210, menu: '可愛いギャルたちが店員の賑やかなカフェ空間をお届け！\n特別なひとときを過ごしにきてね！', image: 'class-1-1.png' },
+            { id: 9, floor: '3F', location: 'A棟', title: '1-2：チュロス', genre: '食品販売', x: 220, y: 210, menu: '外はサクサク、中はモチモチの美味しいチュロスはいかがですか？\n味も選べるよ！', image: 'class-1-2.png' },
+            { id: 10, floor: '3F', location: 'A棟', title: '1-3：ストラックアウト', genre: '体験・アトラクション', x: 290, y: 210, menu: 'コントロールに自信はあるか？\n全的撃破を目指してパーフェクトに挑戦しよう！', image: 'class-1-3.png' },
+            { id: 11, floor: '4F', location: 'A棟', title: '1-4：バー', genre: '体験・アトラクション', x: 160, y: 260, menu: 'お洒落な雰囲気のノンアルコールバーです。\nちょっと大人な気分を味わってみませんか？', image: 'class-1-4.png' },
+            { id: 12, floor: '4F', location: 'A棟', title: '1-5：縁日', genre: '体験・アトラクション', x: 230, y: 260, menu: '射的やヨーヨー釣りなど、お祭りの定番が勢揃い！\n子供から大人まで楽しめます！', image: 'class-1-5.png' },
+            { id: 13, floor: '3F', location: '商業教育棟', title: '1-6：フォトスポット', genre: '展示・発表', x: 120, y: 410, menu: '映える写真を撮るならここ！\n最高の思い出を素敵な写真に残そう！', image: 'class-1-6.png' },
+            { id: 14, floor: '3F', location: '商業教育棟', title: '1-7：トランプゲーム', genre: '体験・アトラクション', x: 180, y: 410, menu: '様々なトランプゲームで真剣勝負！\nディーラーの裏をかいて勝利を掴め！', image: 'class-1-7.png' },
+            { id: 15, floor: '3F', location: '商業教育棟', title: '1-8：キッキングスナイパー', genre: '体験・アトラクション', x: 240, y: 410, menu: '迫りくるターゲットをキックで倒せ！\n高得点を目指して狙いを定めよう！', image: 'class-1-8.png' },
+            { id: 16, floor: '3F', location: '商業教育棟', title: '1-9：フォトスポット', genre: '展示・発表', x: 300, y: 410, menu: 'ここだけの特別なフォトブースを用意してお待ちしています！\nお気軽にどうぞ！', image: 'class-1-9.png' },
+
+            // --- 2年生 クラス企画 ---
+            { id: 17, floor: '3F', location: 'C棟', title: '2-1：シューティングゲーム', genre: '体験・アトラクション', x: 510, y: 220, menu: '的を正確に狙って撃ち抜け！\nスリル満点のシューティング体験が君を待っている！', image: 'class-2-1.png' },
+            { id: 18, floor: '3F', location: 'C棟', title: '2-2：ハニーハント', genre: '体験・アトラクション', x: 570, y: 220, menu: '絵本の世界へようこそ！\nみんなで一緒に甘いハチミツを探す冒険に出かけよう！', image: 'class-2-2.png' },
+            { id: 19, floor: '3F', location: 'C棟', title: '2-3：コーヒーカップ', genre: '体験・アトラクション', x: 630, y: 220, menu: '教室の中に手作りのコーヒーカップが登場！？\nみんなでぐるぐる回って楽しもう！', image: 'class-2-3.png' },
+            { id: 20, floor: '3F', location: 'C棟', title: '2-4：サバゲー', genre: '体験・アトラクション', x: 690, y: 220, menu: 'ハラハラドキドキのサバゲー体験！\nチームワークを活かして勝利を導け！', image: 'class-2-4.png' },
+            { id: 21, floor: '3F', location: 'B棟', title: '2-5：メイドカフェ（ゲーム）', genre: '体験・アトラクション', x: 440, y: 220, menu: '可愛いメイドたちがお出迎え！\n一緒に楽しいゲームで盛り上がりましょう！', image: 'class-2-5.png' },
+            { id: 22, floor: '2F', location: 'A棟', title: '2-6：アメリカンハウス', genre: '体験・アトラクション', x: 340, y: 470, menu: 'アメリカンな雰囲気あふれるアトラクション空間へようこそ！\nぜひ遊びに来てね！', image: 'class-2-6.png' },
+            { id: 2, floor: '2F', location: 'A棟', title: '2-7：喫茶 美和の館', genre: '食品販売', x: 410, y: 460, menu: '美味しいワッフルと飲み物を用意してお待ちしております！', image: 'class-2-7.png' },
+            { id: 23, floor: '2F', location: 'A棟', title: '2-8：カフェ', genre: '食品販売', x: 480, y: 470, menu: 'ホッと一息つける落ち着いたカフェです。\n美味しいドリンクをご用意しています。', image: 'class-2-8.png' },
+            { id: 24, floor: '3F', location: 'C棟', title: '2-9：お化け屋敷', genre: '体験・アトラクション', x: 750, y: 220, menu: '身の毛もよだつ恐怖体験…。\nあなたはこの部屋から無事に脱出できるか！？', image: 'class-2-9.png' },
+
+            // --- 3年生 クラス企画 ---
+            { id: 25, floor: '1F', location: '外テント', title: '3-1：焼きそば', genre: '食品販売', x: 480, y: 610, menu: 'お祭りといえば焼きそば！\n特製ソースの香ばしい匂いに誘われてみませんか？', image: 'class-3-1.png' },
+            { id: 3, floor: '1F', location: '新棟', title: '3-2：かき氷', genre: '食品販売', x: 359, y: 460, menu: '美味しいひんやりかき氷を販売中！', image: 'club-100.png' },
+            { id: 27, floor: '1F', location: 'A棟', title: '3-3：ジュース', genre: '食品販売', x: 440, y: 470, menu: '冷たいジュースをたくさん用意しています！\n歩き疲れたらここで水分補給をしてね！', image: 'class-3-3.png' },
+            { id: 28, floor: '1F', location: '外テント', title: '3-4：餃子', genre: '食品販売', x: 540, y: 610, menu: 'パリッとジューシーな特製焼き餃子！\nアツアツの美味しさをどうぞ！', image: 'class-3-4.png' },
+            { id: 29, floor: '1F', location: '外テント', title: '3-5：はしまき', genre: '食品販売', x: 600, y: 610, menu: 'お箸に巻いた美味しいお好み焼き「はしまき」を販売中！\nワンハンドで食べやすいよ！', image: 'class-3-5.png' },
+            { id: 30, floor: '1F', location: '外テント', title: '3-6：焼き鳥', genre: '食品販売', x: 660, y: 610, menu: '一本一本丁寧に焼き上げたこだわりの焼き鳥です！\nタレと塩を用意しています！', image: 'class-3-6.png' },
+            { id: 1, floor: '1F', location: '新棟', title: '3-7：ポップコーン・わたあめ', genre: '食品販売', x: 103, y: 378, menu: 'なんと1クラスで二個も催しちゃってます！\nぜひ来てね！', image: 'class-3-7.png' },
+            { id: 31, floor: '1F', location: '外テント', title: '3-8：フランクフルト', genre: '食品販売', x: 720, y: 610, menu: 'パリッと弾けるジューシーで食べ応え抜群のフランクフルトをどうぞ！', image: 'class-3-8.png' },
+            { id: 32, floor: '1F', location: '外テント', title: '3-9：小籠包', genre: '食品販売', x: 780, y: 610, menu: '熱々の肉汁がジュワッと溢れ出す本格小籠包！\n火傷に気をつけて召し上がれ！', image: 'class-3-9.png' },
+
+            // --- 部活動 ---
+            { id: 33, floor: '3F', location: '商業教育棟', title: 'アニメ漫画研究部', genre: '展示・発表', x: 340, y: 430, menu: '部員たちが描いた力作イラストの展示や、オリジナル作品の販売を行っています！', image: 'club-101.png' },
+            { id: 34, floor: '1F', location: 'ホール', title: '演劇部', genre: '展示・発表', x: 860, y: 360, menu: '日頃の練習の成果を舞台の上で全力表現！\n心揺さぶる劇をぜひご覧ください！', image: 'club-102.png' },
+            { id: 35, floor: '3F', location: 'A棟', title: '合唱部', genre: '展示・発表', x: 310, y: 230, menu: '心に響く美しいハーモニーをお届けします。\n素敵な歌声をお楽しみください。', image: 'club-103.png' },
+            { id: 36, floor: '3F', location: 'C棟', title: '華道部', genre: '展示・発表', x: 730, y: 230, menu: '部員たちが心を込めて生けた、華やかで個性豊かな生け花の数々を展示しています。', image: 'club-104.png' },
+            { id: 5, floor: '4F', location: 'A棟', title: '軽音楽部', genre: '体験・アトラクション', x: 284, y: 474, menu: '軽音楽部元気はつらつにライブ中！！！きて！！！！！！！！', image: 'club-105.png' },
+            { id: 37, floor: '3F', location: '商業教育棟', title: '茶道部', genre: '体験・アトラクション', x: 380, y: 430, menu: '本格的なお茶点て体験！\n美味しいお茶と和菓子をご用意しておもてなしいたします。', image: 'club-106.png' },
+            { id: 38, floor: '2F', location: 'B棟', title: '自然科学部', genre: '食品販売', x: 510, y: 480, menu: '不思議な「過冷却ジュース」を限定販売！\n科学の不思議を美味しく体験しよう！', image: 'club-107.png' },
+            { id: 39, floor: '3F', location: 'A棟', title: '写真部', genre: '展示・発表', x: 360, y: 230, menu: '一瞬の美しさを切り取った、部員自慢の写真の数々を展示しています。\nぜひご覧ください。', image: 'club-108.png' },
+            { id: 40, floor: '1F', location: '体育館', title: '吹奏楽部', genre: '展示・発表', x: 830, y: 290, menu: '迫力あるブラスバンド演奏をお届け！\nみんなが知っている名曲で盛り上がりましょう！', image: 'club-109.png' },
+            { id: 41, floor: '1F', location: 'さつきホール', title: '筝曲部', genre: '展示・発表', x: 910, y: 360, menu: '日本の伝統楽器・お琴の美しい音色を響かせます。\n優雅なひとときをどうぞ。', image: 'club-110.png' },
+            { id: 42, floor: '1F', location: 'ホール', title: 'ダンス部', genre: '展示・発表', x: 890, y: 360, menu: 'キレのあるかっこいいダンスパフォーマンス！\n熱いステージへみんな集まれ！', image: 'club-111.png' },
+            { id: 43, floor: '1F', location: '体育館', title: 'バトントワリング部', genre: '展示・発表', x: 850, y: 290, menu: '華麗なバトンさばきと息の合った演技！\n輝くステージをお見逃しなく！', image: 'club-112.png' },
+            { id: 44, floor: '1F', location: 'A棟', title: '美術部', genre: '展示・発表', x: 160, y: 480, menu: '絵画や彫刻など、部員たちの個性が光るアート作品の販売と展示を行っています。', image: 'club-113.png' },
+            { id: 45, floor: '4F', location: 'A棟', title: '料理部', genre: '食品販売', x: 260, y: 280, menu: '料理部特製の手作りパイを販売しています！\n焼き立ての美味しさをぜひご賞味ください！', image: 'club-114.png' },
+            { id: 46, floor: '1F', location: 'A棟', title: '電算部', genre: '展示・発表', x: 210, y: 480, menu: '部員が自作したオリジナルゲームやプログラムの展示・体験会を行っています！', image: 'club-115.png' },
+            { id: 47, floor: '3F', location: '商業教育棟', title: '簿記部', genre: '展示・発表', x: 110, y: 460, menu: '日頃の商業の学びの成果を展示中！\n奥深い簿記の魅力をわかりやすく紹介します。', image: 'club-116.png' },
+            { id: 48, floor: '3F', location: '商業教育棟', title: '珠算電卓部', genre: '展示・発表', x: 160, y: 460, menu: '電卓やそろばんの超絶技能の展示や、実際に挑戦できる体験コーナーがあります！', image: 'club-117.png' },
+            { id: 49, floor: '1F', location: '商業教育棟', title: 'ワープロ部', genre: '展示・発表', x: 160, y: 310, menu: 'ワープロ競技大会の様子や、正確で超高速なタイピング技術の展示を行っています！', image: 'club-118.png' },
+            { id: 50, floor: '1F', location: '商業教育棟', title: 'ボランティア部', genre: '展示・発表', x: 210, y: 310, menu: '日頃のボランティア活動報告の展示と、可愛い手作り小物の物販を行っています！', image: 'club-119.png' },
+            { id: 51, floor: '1F', location: '弓道場', title: '弓道部', genre: '体験・アトラクション', x: 920, y: 710, menu: '弓道の体験コーナー！\n見事的に矢を当てることができるか、気軽に挑戦してみよう！', image: 'club-120.png' },
+            { id: 52, floor: '1F', location: 'グラウンド', title: '男女サッカー部', genre: '体験・アトラクション', x: 210, y: 710, menu: 'グラウンドにてキックターゲットを開催中！\n高得点を目指して思い切りキック！', image: 'club-121.png' },
+            { id: 53, floor: '1F', location: 'グラウンド', title: 'ソフトボール部', genre: '体験・アトラクション', x: 260, y: 710, menu: 'ソフトボール部による楽しいストラックアウト体験アトラクション！グラウンドへGO！', image: 'club-122.png' },
+            { id: 7, floor: '1F', location: '新棟', title: 'マーケティング部', genre: '展示・発表', x: 103, y: 300, menu: '企業＆王子高校によって生まれたパンを販売中 !!', image: 'club-123.png' },
+
+            // --- 各種委員会・その他団体 ---
+            { id: 4, floor: '1F', location: '新棟', title: '商業科', genre: '展示・発表', x: 199, y: 347, menu: '商品開発や企業とのコラボレーションで作った作品の展示会です！', image: 'other-200.png' },
+            { id: 6, floor: '1F', location: '体育館', title: '体育館イベント', genre: '展示・発表', x: 808, y: 263, menu: 'ステージ発表や各部活のメインパフォーマンスを行います！', image: 'other-201.png' },
+            { id: 54, floor: '1F', location: '図書館', title: '図書委員会', genre: '展示・発表', x: 110, y: 610, menu: 'おすすめの図書紹介や、学校図書館の魅力を伝えるユニークな展示を行っています。', image: 'other-202.png' },
+            { id: 55, floor: '2F', location: '商業教育棟', title: '文化祭実行委員会', genre: '体験・アトラクション', x: 120, y: 510, menu: 'オリジナルうちわ作り体験や、文化祭の案内・質問コーナー開設中！', image: 'other-203.png' },
+            { id: 56, floor: '1F', location: '体育館', title: '生徒会本部', genre: '展示・発表', x: 870, y: 290, menu: '王華祭限定のオリジナルグッズ物販を行っています！\n思い出にいかがですか？', image: 'other-204.png' },
+            { id: 57, floor: '1F', location: 'C棟', title: 'PTA', genre: '食品販売', x: 610, y: 470, menu: '美味しい和菓子と冷たいお飲物を用意して、皆様の休憩をお待ちしております。', image: 'other-205.png' },
+            { id: 58, floor: '1F', location: 'C棟', title: '同窓会', genre: '体験・アトラクション', x: 660, y: 470, menu: '豪華景品が当たるチャンス！？\n誰でも楽しめるワクワクのくじ引きです！', image: 'other-206.png' }
         ];
-  
+
         const facilityData = [
             { name: "事務室・AED", floor: "1F", x: 200, y: 200, icon: "🚑" },
             { name: "2F トイレ", floor: "2F", x: 610, y: 545, icon: "🚻" }
         ];
-  
+
+        // ⏱️ タイムスケジュール初期データ
         let timeScheduleData = [
-            { id: 1, day: 1, time: "10:00 - 11:00", name: "吹奏楽部：オープニング", delay: "0" },
-            { id: 2, day: 1, time: "11:30 - 13:00", name: "軽音楽部：無敵ライブ", delay: "0" },
-            { id: 3, day: 2, time: "13:00 - 14:00", name: "ダンス部：ファイナル", delay: "0" }
+            { id: 1, day: 1, time: "10:00 - 11:00", name: "吹奏楽部：オープニング", delay: "0", index: 0 },
+            { id: 2, day: 1, time: "11:30 - 13:00", name: "軽音楽部：無敵ライブ", delay: "0", index: 1 },
+            { id: 3, day: 2, time: "13:00 - 14:00", name: "ダンス部：ファイナル", delay: "0", index: 0 }
         ];
-  
+
         const noticeData = [
             { title: "🔥 熱中症にご注意ください", sub: "こまめな水分補給をお願いします。" }
         ];
-  
+
         const ADMIN_PASSWORD = "ouji"; 
-  
+
         // ==========================================
         // ⚙️ 【システムロジックエリア】
         // ==========================================
@@ -582,10 +684,10 @@
         let adminKnockTimeout;
         let currentActiveServerDelay = null;
         let isInitialLoad = true;
-  
+
         const MAP_WIDTH = 1000;
         const MAP_HEIGHT = 800;
-  
+
         window.onload = function() {
             initToggleState();
             buildFloorTabs();
@@ -597,7 +699,7 @@
             buildAllShopsModalList();
             checkFirstAccessWelcome(); 
             initNotificationButtonLogic();
-            checkMenuHintBalloon(); // 💬 吹き出しチェック
+            checkMenuHintBalloon(); 
             
             document.getElementById('notice-list-container').innerHTML = noticeData.map(d => `<li class="greeting-card"><b>${d.title}</b><span style="display:block;color:var(--text-sub);font-size:0.8rem;margin-top:4px;">${d.sub}</span></li>`).join('');
             
@@ -605,16 +707,13 @@
             syncCloudAndCheckAlert(); 
         };
 
-        // 💬 吹き出しを1回限り表示するロジック
         function checkMenuHintBalloon() {
             const hasSeenHint = localStorage.getItem('menu_hint_balloon_seen');
             if (!hasSeenHint) {
-                // 初回アクセス時のみ表示
                 document.getElementById('menu-hint').style.display = 'block';
             }
         }
 
-        // 💬 吹き出しをタップした時の動き（非表示化 ＋ メニューを開く）
         function hideMenuHintAndOpenSidebar() {
             localStorage.setItem('menu_hint_balloon_seen', 'true');
             document.getElementById('menu-hint').style.display = 'none';
@@ -630,7 +729,7 @@
                 toggleInput.checked = true;
             }
         }
-  
+
         function buildFloorTabs() {
             const defaultFloors = ['1F', '2F', '3F', '4F'];
             const dataFloors = shopData.map(s => s.floor);
@@ -646,7 +745,7 @@
             const displayTitle = currentFloor.endsWith('F') ? currentFloor.replace('F', '階') : currentFloor;
             document.getElementById('floor-title').innerText = `${displayTitle}の出店一覧`;
         }
-  
+
         function buildDayTabs() {
             const days = Array.from(new Set(timeScheduleData.map(t => t.day))).sort((a,b) => a-b);
             const container = document.getElementById('day-tab-container');
@@ -655,11 +754,11 @@
                 return `<button id="day${d}-btn" class="day-btn ${activeClass}" onclick="switchDay(${d})">${d}日目</button>`;
             }).join('');
         }
-  
-        style = document.createElement('style');
+
+        let style = document.createElement('style');
         style.innerHTML = '.leaflet-popup-content { margin: 8px 12px !important; }';
         document.head.appendChild(style);
-  
+
         function initImageMap() {
             if (map) { map.remove(); }
             map = L.map('map', {
@@ -674,16 +773,16 @@
             updateMapFloorImage();
             map.on('click', function() { resetActivePinStyle(); });
         }
-  
+
         function updateMapFloorImage() {
             if (currentImageLayer) { map.removeLayer(currentImageLayer); }
             const imageUrl = MAP_IMAGES[currentFloor] || 'map1f.png';
-  
+
             currentImageLayer = L.imageOverlay(imageUrl, [[0, 0], [MAP_HEIGHT, MAP_WIDTH]]).addTo(map);
             map.setView([MAP_HEIGHT / 2, MAP_WIDTH / 2], -0.4); 
             updateMapMarkers();
         }
-  
+
         function switchPage(pageId) {
             document.querySelectorAll('.app-page').forEach(p => p.classList.remove('active'));
             document.querySelectorAll('.page-tab-btn').forEach(b => b.classList.remove('active'));
@@ -693,7 +792,7 @@
                 setTimeout(() => { map.invalidateSize(); map.setView([MAP_HEIGHT / 2, MAP_WIDTH / 2], -0.4); }, 200);
             }
         }
-  
+
         function switchFloor(floor) {
             currentFloor = floor;
             const container = document.getElementById('floor-tab-container');
@@ -707,7 +806,7 @@
             renderShops();
             updateMapFloorImage();
         }
-  
+
         function switchDay(day) {
             currentDay = day;
             const container = document.getElementById('day-tab-container');
@@ -717,40 +816,40 @@
             });
             renderTimeSchedule();
         }
-  
+
         function updateMapMarkers() {
             markersGroup.forEach(m => map.removeLayer(m));
             markersGroup = [];
             markerObjectsMap = {};
-  
+
             shopData.filter(s => s.floor === currentFloor).forEach(shop => {
                 let pinColorClass = "pin-exhibit";
                 if (shop.genre === '食品販売') pinColorClass = "pin-food";
-                else if (shop.genre === '体験・催し') pinColorClass = "pin-dot-play";
-  
+                else if (shop.genre === '体験・アトラクション') pinColorClass = "pin-dot-play";
+
                 const customIcon = L.divIcon({
                     html: `<div class="pin-dot ${pinColorClass}" id="marker-dot-${shop.id}"></div>`,
                     className: 'custom-pin-icon',
                     iconSize: [16, 16],
                     iconAnchor: [8, 8]
                 });
-  
+
                 const popupContent = `
                     <div class="popup-location">${shop.location}</div>
                     <div class="popup-title">${shop.title}</div>
                 `;
-  
+
                 const marker = L.marker([shop.y, shop.x], {icon: customIcon}).addTo(map).bindPopup(popupContent, { maxWidth: 150, minWidth: 120, autoPan: false });
                 
                 marker.on('click', function() {
                     highlightPin(shop.id);
                     openShopDetailFromMap(shop.id);
                 });
-  
+
                 markersGroup.push(marker);
                 markerObjectsMap[shop.id] = marker;
             });
-  
+
             facilityData.filter(f => f.floor === currentFloor).forEach(facility => {
                 const customIcon = L.divIcon({
                     html: `<div class="pin-square" id="facility-pin-${facility.name}">${facility.icon}</div>`,
@@ -762,7 +861,7 @@
                 markersGroup.push(marker);
             });
         }
-  
+
         function highlightPin(shopId) {
             resetActivePinStyle();
             const dotEl = document.getElementById(`marker-dot-${shopId}`);
@@ -771,50 +870,57 @@
                 activeSelectedPin = dotEl;
             }
         }
-  
+
         function resetActivePinStyle() {
             if (activeSelectedPin) {
                 activeSelectedPin.classList.remove('selected');
                 activeSelectedPin = null;
             }
         }
-  
+
         function openShopDetailFromMap(shopId) {
-            document.querySelectorAll('.shop-details').forEach(d => d.classList.remove('open'));
+            // アコーディオンの単一開閉化を適用
+            document.querySelectorAll('.shop-details').forEach(d => {
+                if(d.id !== `details-${shopId}`) d.classList.remove('open');
+            });
             const detailDiv = document.getElementById(`details-${shopId}`);
             if (detailDiv) {
                 detailDiv.classList.add('open');
                 detailDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }
         }
-  
+
         function renderShops() {
             const container = document.getElementById('shop-list-container');
             container.innerHTML = '';
             const filtered = shopData.filter(shop => shop.floor === currentFloor && (selectedTag === 'すべて' || shop.genre === selectedTag));
-  
+
             if(filtered.length === 0) {
                 container.innerHTML = '<p style="text-align:center; color:#9ca3af; font-weight:bold; padding:20px;">このフロアには該当する出店がありません</p>';
                 return;
             }
-  
+
             filtered.forEach(shop => {
-                let genreClass = "genre-exhibit";
+                let dotColorClass = "dot-exhibit";
                 let badgeEmoji = "🎨";
-                if(shop.genre === '食品販売') { genreClass = "genre-food"; badgeEmoji = "🍴"; }
-                else if(shop.genre === '体験・催し') { genreClass = "genre-play"; badgeEmoji = "🎮"; }
-  
+                if(shop.genre === '食品販売') { dotColorClass = "dot-food"; badgeEmoji = "🍴"; }
+                else if(shop.genre === '体験・アトラクション') { dotColorClass = "dot-play"; badgeEmoji = "🎮"; }
+
+                const shopImg = shop.image ? shop.image : 'default.png';
+
                 const card = document.createElement('div');
-                card.className = `shop-card-wrapper ${genreClass}`;
+                card.className = `shop-card-wrapper`; // 背景ノーマル白
                 card.innerHTML = `
                     <div class="shop-card" onclick="toggleAccordion(${shop.id})">
                         <span class="shop-loc">${shop.location}</span>
-                        <div class="shop-title">${shop.title}<span class="shop-genre">${badgeEmoji} ${shop.genre}</span></div>
+                        <div class="shop-title">${shop.title}<span class="shop-genre"><span class="genre-dot ${dotColorClass}"></span>${badgeEmoji} ${shop.genre}</span></div>
                         <i class="fa-solid fa-chevron-down" style="color:#9ca3af;"></i>
                     </div>
                     <div class="shop-details" id="details-${shop.id}">
-                        <!-- 画像ロゴダミー枠（CSS適用により長押し不可） -->
-                        <div class="logo-dummy">NO IMAGE</div>
+                        <!-- 🖼️ 長押しダウンロード・ドラッグを禁止した安全な画像タグ -->
+                        <div class="logo-dummy" style="padding:0; background:none;">
+                            <img src="${shopImg}" alt="logo" style="width:100%; height:100%; object-fit:cover; pointer-events:none; -webkit-touch-callout:none;" onerror="this.style.display='none'; this.parentElement.innerText='NO IMAGE';">
+                        </div>
                         <div>
                             <span style="font-size:0.75rem; font-weight:bold; color:var(--primary);">📋 メニュー</span>
                             <div style="font-size:0.8rem; margin-bottom:8px; color:var(--text-main); white-space: pre-wrap;">${shop.menu}</div>
@@ -825,7 +931,7 @@
                 container.appendChild(card);
             });
         }
-  
+
         function panToCoordinates(x, y, shopId, targetFloor) {
             if (currentFloor !== targetFloor) { 
                 switchFloor(targetFloor); 
@@ -841,55 +947,62 @@
             const scrollArea = document.querySelector('.scrollable-content');
             if (scrollArea) scrollArea.scrollTo({ top: 0, behavior: 'smooth' });
         }
-  
+
         function toggleAccordion(id) {
             const detail = document.getElementById(`details-${id}`);
-            detail.classList.toggle('open');
+            const isOpen = detail.classList.contains('open');
+            
+            // 🔄 アコーディオン単一開閉化（他を全て閉じる）
+            document.querySelectorAll('.shop-details').forEach(d => d.classList.remove('open'));
+            
+            if (!isOpen) {
+                detail.classList.add('open');
+            }
         }
-  
+
         function filterTag(tag, element) {
             selectedTag = tag;
             document.querySelectorAll('.tag-btn').forEach(b => b.className = "tag-btn");
             if(tag === 'すべて') element.classList.add('active-all');
             else if(tag === '食品販売') element.classList.add('active-food');
-            else if(tag === '展示・部活') element.classList.add('active-exhibit');
-            else if(tag === '体験・催し') element.classList.add('active-play');
+            else if(tag === '展示・発表') element.classList.add('active-exhibit');
+            else if(tag === '体験・アトラクション') element.classList.add('active-play');
             renderShops();
         }
-  
+
         function filterSidebarShops() {
             const query = document.getElementById('sidebar-search-box').value.trim();
             const resultsContainer = document.getElementById('sidebar-search-results');
             resultsContainer.innerHTML = '';
             if (query === '') return;
-  
+
             shopData.filter(shop => shop.title.includes(query) || shop.menu.includes(query)).forEach(shop => {
                 let genreClass = "genre-exhibit";
                 if(shop.genre === '食品販売') genreClass = "genre-food";
-                else if(shop.genre === '体験・催し') genreClass = "genre-play";
-  
+                else if(shop.genre === '体験・アトラクション') genreClass = "genre-play";
+
                 const item = document.createElement('button');
-                item.className = `sidebar-result-item ${genreClass}`;
+                item.className = `sidebar-result-item ${genreClass}`; // メニュー側はカラー背景を維持
                 item.onclick = () => { toggleSidebar(); panToCoordinates(shop.x, shop.y, shop.id, shop.floor); };
                 item.innerHTML = `<div><span class="sidebar-result-floor">${shop.floor}</span><span class="sidebar-result-title">${shop.title}</span></div>`;
                 resultsContainer.appendChild(item);
             });
         }
-  
+
         function buildAllShopsModalList() {
             const container = document.getElementById('all-shops-modal-container');
             container.innerHTML = '';
-            const order = { '食品販売': 1, '展示・部活': 2, '体験・催し': 3 };
+            const order = { '食品販売': 1, '展示・発表': 2, '体験・アトラクション': 3 };
             const sortedShops = [...shopData].sort((a, b) => order[a.genre] - order[b.genre]);
-  
+
             sortedShops.forEach(shop => {
                 let genreClass = "genre-exhibit";
                 let badgeEmoji = "🎨";
                 if(shop.genre === '食品販売') { genreClass = "genre-food"; badgeEmoji = "🍴"; }
-                else if(shop.genre === '体験・催し') { genreClass = "genre-play"; badgeEmoji = "🎮"; }
-  
+                else if(shop.genre === '体験・アトラクション') { genreClass = "genre-play"; badgeEmoji = "🎮"; }
+
                 const btn = document.createElement('button');
-                btn.className = `sidebar-result-item ${genreClass}`;
+                btn.className = `sidebar-result-item ${genreClass}`; // メニュー側はカラー背景を維持
                 btn.style.width = "100%"; btn.style.display = "block"; btn.style.marginBottom = "4px";
                 btn.onclick = () => { closeModal('modal-all-shops'); panToCoordinates(shop.x, shop.y, shop.id, shop.floor); };
                 btn.innerHTML = `
@@ -932,37 +1045,78 @@
             const padM = String(minutes).padStart(2, '0');
             return ` ➡️ 予定開始時刻：${padH}:${padM}`;
         }
-  
+
+        // ⚠️ 連鎖遅延（後ろのステージへの自動波及）の判定ロジック関数
+        function checkChainDelayStatus(currentSlot, allSlots) {
+            let activeDelayMinutes = 0;
+            
+            // 同日の時間割をインデックス順にソートしてチェック
+            const sameDaySlots = allSlots
+                .filter(s => s.day === currentSlot.day)
+                .sort((a, b) => a.index - b.index);
+
+            for (let slot of sameDaySlots) {
+                // 現在チェックしている演目より前の演目で10分以上の遅延があるか確認
+                if (slot.index < currentSlot.index) {
+                    let dMin = 0;
+                    if (slot.delay && slot.delay !== "0" && slot.delay !== "5分未満") {
+                        dMin = parseInt(slot.delay.replace(/[^0-9]/g, ""), 10) || 0;
+                    }
+                    if (dMin >= 10) {
+                        activeDelayMinutes = dMin; // 10分以上の最大遅延を保持
+                    }
+                }
+            }
+            return activeDelayMinutes;
+        }
+
         function renderTimeSchedule() {
             const container = document.getElementById('timeline-container');
             container.innerHTML = '';
+            
             timeScheduleData.filter(t => t.day === currentDay).forEach(slot => {
                 const isFav = favorites.includes(slot.id);
-                const isDelayed = slot.delay !== "0";
+                const isDirectDelayed = slot.delay !== "0";
                 
-                const calcTimeHtml = isDelayed ? calculateNewStartTime(slot.time, slot.delay) : "";
+                // 連鎖遅延の判定
+                const chainDelayMinutes = checkChainDelayStatus(slot, timeScheduleData);
+                const isChainDelayed = !isDirectDelayed && chainDelayMinutes >= 10;
+                
+                let slotClass = '';
+                let statusText = '✅ 通常通り';
+                let calcTimeHtml = '';
+
+                if (isDirectDelayed) {
+                    slotClass = 'status-delayed';
+                    statusText = `⚠️ ${slot.delay}遅延中`;
+                    calcTimeHtml = calculateNewStartTime(slot.time, slot.delay);
+                } else if (isChainDelayed) {
+                    slotClass = 'status-chain-delayed';
+                    statusText = `⚠️ 前の遅延による影響の恐れあり`;
+                    calcTimeHtml = calculateNewStartTime(slot.time, chainDelayMinutes + "分");
+                }
 
                 const div = document.createElement('div');
-                div.className = `time-slot ${isDelayed ? 'status-delayed' : ''}`;
+                div.className = `time-slot ${slotClass}`;
                 div.innerHTML = `
                     <div>
-                        <span class="time-text">${slot.time}${isDelayed ? `<span class="delayed-time-calc">${calcTimeHtml}</span>` : ''}</span>
+                        <span class="time-text">${slot.time}${calcTimeHtml ? `<span class="delayed-time-calc">${calcTimeHtml}</span>` : ''}</span>
                         <div class="band-name">${slot.name}</div>
-                        <span class="band-status ${isDelayed ? 'delayed' : ''}">${isDelayed ? `⚠️ ${slot.delay}遅延中` : '✅ 通常通り'}</span>
+                        <span class="band-status ${isDirectDelayed ? 'delayed' : (isChainDelayed ? 'chain-delayed' : '')}">${statusText}</span>
                     </div>
                     <button class="fav-btn ${isFav ? 'active' : ''}" onclick="toggleFavorite(${slot.id})">★</button>
                 `;
                 container.appendChild(div);
             });
         }
-  
+
         function toggleFavorite(id) {
             if (favorites.includes(id)) { favorites = favorites.filter(fid => fid !== id); } 
             else { favorites.push(id); }
             localStorage.setItem('festival_favs', JSON.stringify(favorites));
             renderTimeSchedule();
         }
-  
+
         function handleAdminKnock() {
             clearTimeout(adminKnockTimeout);
             adminKnockCount++;
@@ -977,7 +1131,7 @@
             }
             adminKnockTimeout = setTimeout(() => { adminKnockCount = 0; }, 2000);
         }
-  
+
         function checkFirstAccessWelcome() {
             const hasSeen = localStorage.getItem('festival_welcome_seen');
             if (!hasSeen) {
@@ -1043,7 +1197,7 @@
 
             triggerDelayNotification(targetName, finalMinutes);
         }
-  
+
         function triggerDelayNotification(targetName, delayValue) {
             const broadcastPayload = { 
                 target: targetName, 
@@ -1068,7 +1222,7 @@
                 alert("通信エラーが発生しました。");
             });
         }
-  
+
         function syncCloudAndCheckAlert() {
             fetch(FIREBASE_DB_URL)
             .then(response => {
@@ -1081,7 +1235,7 @@
                     return;
                 }
                 currentActiveServerDelay = data;
-  
+
                 timeScheduleData.forEach(slot => {
                     if (slot.name === data.target) {
                         if (slot.delay !== data.delay) {
@@ -1090,15 +1244,29 @@
                             
                             localStorage.removeItem('alert_bar_hidden_by_user');
                             refreshGlobalAlertBarDisplay();
-  
+
+                            // 🔄 お気に入り限定通知・アラート受信機能（ポップアップ）の修正
                             if (!isInitialLoad && data.delay !== "0") {
-                                const lastSeenPopupKey = `popup_seen_${data.target}_${data.delay}_${data.timestamp}`;
-                                if (!localStorage.getItem(lastSeenPopupKey)) {
-                                    const msg = `【進行変更】\n「${data.target}」に、現在【${data.delay}】の遅れが発生しています！`;
-                                    
-                                    document.getElementById('sync-alert-text').innerText = msg;
-                                    document.getElementById('modal-sync-alert').classList.add('show');
-                                    localStorage.setItem(lastSeenPopupKey, 'true'); 
+                                const isFav = favorites.includes(slot.id);
+                                
+                                // お気に入りに登録されているか、またはこのステージより後の演目がお気に入りされていて連鎖遅延の影響を受けるか判定
+                                const chainDelayMinutes = checkChainDelayStatus(slot, timeScheduleData);
+                                const hasFavChainAffected = timeScheduleData.some(s => s.day === slot.day && s.index >= slot.index && favorites.includes(s.id));
+
+                                if (isFav || hasFavChainAffected) {
+                                    const lastSeenPopupKey = `popup_seen_${data.target}_${data.delay}_${data.timestamp}`;
+                                    if (!localStorage.getItem(lastSeenPopupKey)) {
+                                        let msg = `【進行変更】\n「${data.target}」に、現在【${data.delay}】の遅れが発生しています！`;
+                                        
+                                        // 連鎖遅延警告の注意書き追加
+                                        if (hasFavChainAffected && !isFav) {
+                                            msg += `\n\n⚠️ お気に入り登録したステージが前のスケジュールの遅延により開催時刻が変わる恐れがあります。`;
+                                        }
+
+                                        document.getElementById('sync-alert-text').innerText = msg;
+                                        document.getElementById('modal-sync-alert').classList.add('show');
+                                        localStorage.setItem(lastSeenPopupKey, 'true'); 
+                                    }
                                 }
                             }
                         }
@@ -1122,14 +1290,28 @@
             const isUserHidden = localStorage.getItem('alert_bar_hidden_by_user') === 'true';
             const hasDelay = currentActiveServerDelay.delay !== "0";
 
-            if (!toggleEnabled || isUserHidden || !hasDelay) {
+            // 🔄 お気に入り限定通知・アラート受信機能（アラートバー）の修正
+            // サーバー側で現在遅延しているステージ枠をデータ特定
+            const targetSlot = timeScheduleData.find(s => s.name === currentActiveServerDelay.target);
+            let shouldShowForFav = false;
+
+            if (targetSlot) {
+                const isFav = favorites.includes(targetSlot.id);
+                // 当該演目、またはそれより後ろの演目にお気に入りが含まれているか
+                const hasFavChainAffected = timeScheduleData.some(s => s.day === targetSlot.day && s.index >= targetSlot.index && favorites.includes(s.id));
+                if (isFav || hasFavChainAffected) {
+                    shouldShowForFav = true;
+                }
+            }
+
+            if (!toggleEnabled || isUserHidden || !hasDelay || !shouldShowForFav) {
                 alertBar.style.display = 'none';
             } else {
                 document.getElementById('alert-message').innerText = `遅延発生: ${currentActiveServerDelay.target} (${currentActiveServerDelay.delay}遅れ)`;
                 alertBar.style.display = 'flex';
             }
         }
-  
+
         function initAdminSelect() {
             document.getElementById('admin-target-select').innerHTML = timeScheduleData.map(t => 
                 `<option value="${t.name}" data-name="${t.name}" data-day="${t.day}">【${t.day}日目】${t.name} (${t.time})</option>`
@@ -1142,7 +1324,6 @@
         }
 
         function toggleSidebar() { 
-            // 🎬 メニューを開いたタイミングで、吹き出しの既読フラグを立てて非表示にする
             localStorage.setItem('menu_hint_balloon_seen', 'true');
             document.getElementById('menu-hint').style.display = 'none';
 
@@ -1172,7 +1353,7 @@
                     alert('お使いのブラウザや環境は通知機能に対応していません。');
                     return;
                 }
-  
+
                 if (Notification.permission === 'denied') {
                     alert('URLの左側にある鍵マーク、またはスマホの設定アプリから通知設定を【許可】に変更してください。詳細な手順は下のガイドをご覧ください。');
                     return;
