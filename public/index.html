@@ -913,30 +913,65 @@
         function closeModal(id) { document.getElementById(id).classList.remove('show'); }
         function closeModalOnOverlay(e, id) { if (e.target === document.getElementById(id)) closeModal(id); }
 
-        function initNotificationButtonLogic() {
-            const notifyBtn = document.getElementById('change-notification-btn');
-            if (!notifyBtn) return;
+       function initNotificationButtonLogic() {
+    const notifyBtn = document.getElementById('change-notification-btn');
+    if (!notifyBtn) return;
 
-            notifyBtn.addEventListener('click', () => {
-                if (!('Notification' in window)) {
-                    alert('お使いのブラウザは通知機能に対応していません。別のブラウザでお試しください。');
-                    return;
-                }
-  
-                Notification.requestPermission().then((permission) => {
-                    if (permission === 'granted') {
-                        alert('ブラウザの設定で【許可】されました！ステージの遅延情報をお届けします。');
-                        closeModal('modal-push'); 
-                    } else if (permission === 'denied') {
-                        alert('ブラウザの設定で【ブロック】されました。通知を受け取るには、アドレスバーの鍵マークやベルマーク（設定）からブロックを解除してください。');
-                    } else {
-                        alert('通知設定が変更されませんでした。');
-                    }
-                }).catch((error) => {
-                    console.error('通知のリクエスト中にエラーが発生しました:', error);
-                });
-            });
+    // 現在の通知ステータスをチェックしてボタンの見た目を変える
+    if ('Notification' in window) {
+        if (Notification.permission === 'granted') {
+            notifyBtn.innerText = '✅ 通知はすでに許可されています';
+            notifyBtn.style.background = '#28a745';
+        } else if (Notification.permission === 'denied') {
+            notifyBtn.innerText = '❌ ブロック中（解除方法はこちら）';
+            notifyBtn.style.background = '#dc3545';
         }
+    }
+
+    notifyBtn.addEventListener('click', () => {
+        // 1. そもそもブラウザが対応しているか
+        if (!('Notification' in window)) {
+            alert('お使いのブラウザや環境は通知機能に対応していません。※iPhoneの場合は「ホーム画面に追加」してから開いてください。');
+            return;
+        }
+
+        // 2. すでに拒否されている場合の親切なアナウンス
+        if (Notification.permission === 'denied') {
+            alert('ブラウザの設定で既に通知が【ブロック】されています。\n\n画面上のURLバーの左側にある「鍵マーク」や「設定ボタン」をタップして、通知の許可を「オン」に手動で切り替えてください！');
+            return;
+        }
+
+        // 3. すでに許可されている場合
+        if (Notification.permission === 'granted') {
+            alert('通知はすでに許可されています！ステージの遅延情報をお待ちください。');
+            closeModal('modal-push');
+            return;
+        }
+
+        // 4. まだ許可も拒否もされていない場合（ポップアップを要求）
+        notifyBtn.innerText = 'リクエスト中...';
+        
+        Notification.requestPermission().then((permission) => {
+            if (permission === 'granted') {
+                alert('ありがとうございます！通知が許可されました。');
+                notifyBtn.innerText = '✅ 通知許可済み';
+                notifyBtn.style.background = '#28a745';
+                closeModal('modal-push'); 
+            } else if (permission === 'denied') {
+                alert('通知がブロックされました。今後通知を受け取るにはブラウザの設定から変更が必要です。');
+                notifyBtn.innerText = '❌ ブロック中';
+                notifyBtn.style.background = '#dc3545';
+            } else {
+                alert('通知設定が保留されました。再度お試しください。');
+                notifyBtn.innerText = '通知システムを変更する';
+            }
+        }).catch((error) => {
+            console.error('通知要求エラー:', error);
+            alert('通知のリクエスト中にエラーが発生しました。HTTPS通信（安全な接続）になっているか確認してください。');
+            notifyBtn.innerText = '通知システムを変更する';
+        });
+    });
+}
     </script>
 </body>
 </html>
