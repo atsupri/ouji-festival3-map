@@ -228,6 +228,7 @@
         .band-name { font-weight: bold; font-size: 0.95rem; }
         .band-status { font-size: 0.75rem; font-weight: bold; color: #10b981; }
         .band-status.delayed { color: #b45309; }
+        .delayed-time-calc { display: block; font-size: 0.8rem; color: #dc2626; font-weight: bold; margin-top: 2px; }
         .fav-btn { background: none; border: none; font-size: 1.35rem; color: #d1d5db; cursor: pointer; }
         .fav-btn.active { color: #f59e0b; }
   
@@ -245,12 +246,22 @@
         .greeting-title { font-size: 0.85rem; font-weight: bold; color: var(--primary); margin-bottom: 4px; }
         .greeting-text { font-size: 0.8rem; line-height: 1.5; color: var(--text-main); white-space: pre-wrap; }
   
-        .admin-panel label { font-weight: bold; display: block; margin-top: 10px; font-size: 0.9rem; }
-        .admin-panel select { width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #d1d5db; margin-top: 5px; font-size: 0.85rem; }
+        .admin-panel label { font-weight: bold; display: block; margin-top: 12px; font-size: 0.9rem; }
+        .admin-panel select, .admin-panel input { width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #d1d5db; margin-top: 5px; font-size: 0.85rem; }
         .admin-buttons { display: flex; flex-direction: column; gap: 8px; margin-top: 15px; }
         .admin-btn { border: none; padding: 10px; border-radius: 6px; font-weight: bold; color: white; cursor: pointer; }
         .admin-btn.delay { background: #eab308; }
         .admin-btn.reset { background: #10b981; }
+
+        /* 🎛️ オンオフ切り替えバー設定 */
+        .toggle-wrapper { display: flex; justify-content: space-between; align-items: center; margin-top: 20px; padding-top: 15px; border-top: 1px dashed var(--border); }
+        .toggle-label { font-size: 0.9rem; font-weight: bold; color: var(--text-main); text-align: left; }
+        .switch { position: relative; display: inline-block; width: 50px; height: 26px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .3s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 4px; bottom: 4px; background-color: white; transition: .3s; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--primary); }
+        input:checked + .slider:before { transform: translateX(24px); }
     </style>
 </head>
 <body>
@@ -335,7 +346,7 @@
             </div>
             <p style="font-size: 0.85rem; line-height: 1.5; margin-bottom: 12px;">
                 王子高文化祭アプリへようこそ！<br>
-                ステージの急なタイムテーブル変更や遅延情報などの重大ニュースを画面でお知らせするために、通知設定を有効にしてください。
+                ステージの急なタイムスケジュール変更や遅延情報などの重大ニュースを画面でおお知らせするために、通知設定を有効にしてください。
             </p>
             <button style="width:100%; padding:12px; background:var(--primary); color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer;" onclick="closeWelcomeModal()">確認して閉じる</button>
         </div>
@@ -392,11 +403,23 @@
                 <button onclick="closeModal('modal-push')">&times;</button>
             </div>
             <p style="margin: 10px 0 20px 0; color: #212529; font-size: 15px; line-height: 1.6; font-weight: 500;">
-                📢 通知をオンにすることで体育館ステージの遅延情報が届くようになります。
+                📢 通知をオンにすることで各ステージの遅延情報が届くようになります。
             </p>
             <button id="change-notification-btn" style="width:100%; padding:14px; background:#28a745; color:white; border:none; border-radius:6px; font-weight:bold; font-size:16px; cursor:pointer;">
                 通知システムを変更する
             </button>
+
+            <!-- 🎛️ 校内マップ上に遅延表示をする（オンオフのバー） -->
+            <div class="toggle-wrapper">
+                <div class="toggle-label">
+                    <span>📍 校内マップ上に遅延情報を表示</span>
+                    <span style="display:block; font-size:0.7rem; color:var(--text-sub); font-weight:normal; margin-top:2px;">オフにすると画面上部の赤い遅延バーを非表示にします</span>
+                </div>
+                <label class="switch">
+                    <input type="checkbox" id="map-delay-toggle" checked onchange="handleDelayToggleChange()">
+                    <span class="slider"></span>
+                </label>
+            </div>
         </div>
     </div>
   
@@ -406,19 +429,33 @@
                 <h3>🛠️ 管理者コントロールパネル</h3>
                 <button onclick="closeModal('modal-admin')">&times;</button>
             </div>
-            <label for="admin-target-select">遅延対象イベント:</label>
+            <label for="admin-target-select">遅延対象イベント枠:</label>
             <select id="admin-target-select"></select>
+
+            <label for="admin-time-select">遅延時間を選択:</label>
+            <select id="admin-time-select" onchange="toggleCustomTimeInput()">
+                <option value="5分未満">5分未満</option>
+                <option value="10分">10分</option>
+                <option value="15分">15分</option>
+                <option value="20分">20分</option>
+                <option value="custom">その他（自由入力）</option>
+                <option value="0">通常進行（遅延なし）</option>
+            </select>
+
+            <div id="custom-time-wrapper" style="display: none;">
+                <label for="admin-custom-time">自由記述 (半角数字のみ・分):</label>
+                <input type="text" id="admin-custom-time" placeholder="例: 25" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+            </div>
+
             <div class="admin-buttons">
-                <button class="admin-btn delay" onclick="triggerDelayNotification(15)">📢 15分遅延をブロードキャスト</button>
-                <button class="admin-btn delay" onclick="triggerDelayNotification(30)">📢 30分遅延をブロードキャスト</button>
-                <button class="admin-btn reset" onclick="triggerDelayNotification(0)">✅ 通常進行に戻す</button>
+                <button class="admin-btn delay" style="background: var(--primary);" onclick="submitAdminBroadcast()">📢 遅延情報を一斉ブロードキャスト</button>
             </div>
         </div>
     </div>
   
     <footer class="app-footer">
         <button class="page-tab-btn active" onclick="switchPage('map-page')"><i class="fa-solid fa-map-location-dot"></i><span>校内マップ</span></button>
-        <button class="page-tab-btn" onclick="switchPage('timeline-page')"><i class="fa-solid fa-clock"></i><span>タイムライン</span></button>
+        <button class="page-tab-btn" onclick="switchPage('timeline-page')"><i class="fa-solid fa-clock"></i><span>タイムスケジュール</span></button>
     </footer>
   
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -443,7 +480,7 @@
             { id: 4, floor: '1F', location: '新棟', title: '商業科', genre: '展示・部活', x: 199, y: 347, image: '', menu: '商品開発や企業とのコラボレーションで作った作品の展示会です！' },
             { id: 5, floor: '4F', location: 'A棟', title: '軽音楽部', genre: '体験・催し', x: 284, y: 474, image: '', menu: '軽音楽部元気はつらつにライブ中！！！きて！！！！！！！！' },
             { id: 6, floor: '1F', location: '体育館', title: '体育館イベント', genre: '展示・部活', x: 808, y: 263, image: '', menu: 'ステージ発表や各部活のメインパフォーマンスを行います！' },
-            { id: 7, floor: '1F', location: '新棟', title: 'マーケティング部', genre: '展示・部活', x: 103, y: 300, image: '', menu: '企業＆王子高校によって生まれたパンを販売中！！' }
+            { id: 7, floor: '1F', location: '新棟', title: 'マーケティング部', genre: '展示・部活', x: 103, y: 300, image: '', menu: '企業＆王子高校によって生まれたパンを販売中 !!' }
         ];
   
         const facilityData = [
@@ -451,10 +488,11 @@
             { name: "2F トイレ", floor: "2F", x: 610, y: 545, icon: "🚻" }
         ];
   
-        let timelineData = [
-            { id: 1, day: 1, time: "10:00 - 11:00", name: "吹奏楽部：オープニング", delay: 0 },
-            { id: 2, day: 1, time: "11:30 - 13:00", name: "軽音楽部：無敵ライブ", delay: 0 },
-            { id: 3, day: 2, time: "13:00 - 14:00", name: "ダンス部：ファイナル", delay: 0 }
+        // 🗓️ 【タイムスケジュール枠データ】
+        let timeScheduleData = [
+            { id: 1, day: 1, time: "10:00 - 11:00", name: "吹奏楽部：オープニング", delay: "0" },
+            { id: 2, day: 1, time: "11:30 - 13:00", name: "軽音楽部：無敵ライブ", delay: "0" },
+            { id: 3, day: 2, time: "13:00 - 14:00", name: "ダンス部：ファイナル", delay: "0" }
         ];
   
         const noticeData = [
@@ -477,16 +515,18 @@
         let favorites = JSON.parse(localStorage.getItem('festival_favs')) || [];
         let adminKnockCount = 0;
         let adminKnockTimeout;
+        let currentActiveServerDelay = null;
   
         const MAP_WIDTH = 1000;
         const MAP_HEIGHT = 800;
   
         window.onload = function() {
+            initToggleState();
             buildFloorTabs();
             buildDayTabs();
             initImageMap();
             renderShops();
-            renderTimeline();
+            renderTimeSchedule();
             initAdminSelect();
             buildAllShopsModalList();
             checkFirstAccessWelcome(); 
@@ -494,10 +534,19 @@
             
             document.getElementById('notice-list-container').innerHTML = noticeData.map(d => `<li class="greeting-card"><b>${d.title}</b><span style="display:block;color:var(--text-sub);font-size:0.8rem;margin-top:4px;">${d.sub}</span></li>`).join('');
             
-            // 2秒に1回自動で最新の遅延データをチェック
             setInterval(syncCloudAndCheckAlert, 2000);
             syncCloudAndCheckAlert(); 
         };
+
+        function initToggleState() {
+            const savedState = localStorage.getItem('map_delay_display_enabled');
+            const toggleInput = document.getElementById('map-delay-toggle');
+            if (savedState === 'false') {
+                toggleInput.checked = false;
+            } else {
+                toggleInput.checked = true;
+            }
+        }
   
         function buildFloorTabs() {
             const defaultFloors = ['1F', '2F', '3F', '4F'];
@@ -516,7 +565,7 @@
         }
   
         function buildDayTabs() {
-            const days = Array.from(new Set(timelineData.map(t => t.day))).sort((a,b) => a-b);
+            const days = Array.from(new Set(timeScheduleData.map(t => t.day))).sort((a,b) => a-b);
             const container = document.getElementById('day-tab-container');
             container.innerHTML = days.map(d => {
                 const activeClass = d === currentDay ? 'active' : '';
@@ -583,7 +632,7 @@
                 const onclickStr = b.getAttribute('onclick') || '';
                 b.classList.toggle('active', onclickStr.includes(`(${day})`));
             });
-            renderTimeline();
+            renderTimeSchedule();
         }
   
         function updateMapMarkers() {
@@ -769,20 +818,59 @@
                 container.appendChild(btn);
             });
         }
+
+        // ⏱️ 予定開始時刻を勝手に計算して出す便利関数
+        function calculateNewStartTime(originalTimeRange, delayStr) {
+            if (!delayStr || delayStr === "0" || delayStr === "通常進行") return "";
+            
+            // 元の時間範囲 (例: "10:00 - 11:00") から開始時刻 "10:00" を取り出す
+            const startTimeStr = originalTimeRange.split("-")[0].trim();
+            const timeParts = startTimeStr.split(":");
+            if (timeParts.length !== 2) return "";
+
+            let hours = parseInt(timeParts[0], 10);
+            let minutes = parseInt(timeParts[1], 10);
+
+            // 遅延分数を抽出
+            let delayMinutes = 0;
+            if (delayStr === "5分未満") {
+                delayMinutes = 4; // 5分未満の代表として4分で計算
+            } else {
+                delayMinutes = parseInt(delayStr.replace(/[^0-9]/g, ""), 10) || 0;
+            }
+
+            if (delayMinutes === 0) return "";
+
+            // 分数を足し算
+            minutes += delayMinutes;
+            if (minutes >= 60) {
+                hours += Math.floor(minutes / 60);
+                minutes = minutes % 60;
+            }
+            if (hours >= 24) hours = hours % 24;
+
+            const padH = String(hours).padStart(2, '0');
+            const padM = String(minutes).padStart(2, '0');
+            return ` ➡️ 予定開始時刻：${padH}:${padM}`;
+        }
   
-        function renderTimeline() {
+        function renderTimeSchedule() {
             const container = document.getElementById('timeline-container');
             container.innerHTML = '';
-            timelineData.filter(t => t.day === currentDay).forEach(slot => {
+            timeScheduleData.filter(t => t.day === currentDay).forEach(slot => {
                 const isFav = favorites.includes(slot.id);
-                const isDelayed = slot.delay > 0;
+                const isDelayed = slot.delay !== "0";
+                
+                // 遅延している場合は新しい開始時間表記を生成
+                const calcTimeHtml = isDelayed ? calculateNewStartTime(slot.time, slot.delay) : "";
+
                 const div = document.createElement('div');
                 div.className = `time-slot ${isDelayed ? 'status-delayed' : ''}`;
                 div.innerHTML = `
                     <div>
-                        <span class="time-text">${slot.time}</span>
+                        <span class="time-text">${slot.time}${isDelayed ? `<span class="delayed-time-calc">${calcTimeHtml}</span>` : ''}</span>
                         <div class="band-name">${slot.name}</div>
-                        <span class="band-status ${isDelayed ? 'delayed' : ''}">${isDelayed ? `⚠️ ${slot.delay}分遅延中` : '✅ 通常通り'}</span>
+                        <span class="band-status ${isDelayed ? 'delayed' : ''}">${isDelayed ? `⚠️ ${slot.delay}遅延中` : '✅ 通常通り'}</span>
                     </div>
                     <button class="fav-btn ${isFav ? 'active' : ''}" onclick="toggleFavorite(${slot.id})">★</button>
                 `;
@@ -794,7 +882,7 @@
             if (favorites.includes(id)) { favorites = favorites.filter(fid => fid !== id); } 
             else { favorites.push(id); }
             localStorage.setItem('festival_favs', JSON.stringify(favorites));
-            renderTimeline();
+            renderTimeSchedule();
         }
   
         function handleAdminKnock() {
@@ -804,6 +892,7 @@
                 adminKnockCount = 0;
                 const pass = prompt("管理者パスワードを入力してください:");
                 if (pass === ADMIN_PASSWORD) {
+                    initAdminSelect(); 
                     openModal('modal-admin');
                 }
                 else if(pass !== null) alert("パスワードが違います。");
@@ -821,15 +910,74 @@
         }
         function closeWelcomeModal() {
             localStorage.setItem('festival_welcome_seen', 'true');
+            closeWelcomeModalLogic();
+        }
+        function closeWelcomeModalLogic() {
             closeModal('modal-welcome-push');
         }
+
+        function handleDelayToggleChange() {
+            const isChecked = document.getElementById('map-delay-toggle').checked;
+            localStorage.setItem('map_delay_display_enabled', isChecked ? 'true' : 'false');
+            if (!isChecked) {
+                document.getElementById('global-alert').style.display = 'none';
+            } else {
+                refreshGlobalAlertBarDisplay();
+            }
+        }
+
+        function toggleCustomTimeInput() {
+            const timeSelect = document.getElementById('admin-time-select').value;
+            const customWrapper = document.getElementById('custom-time-wrapper');
+            if (timeSelect === 'custom') {
+                customWrapper.style.display = 'block';
+            } else {
+                customWrapper.style.display = 'none';
+            }
+        }
+
+        // 【発信側】日程別の工夫と最終ワンクッション確認を追加
+        function submitAdminBroadcast() {
+            const targetSelect = document.getElementById('admin-target-select');
+            const selectedOption = targetSelect.options[targetSelect.selectedIndex];
+            
+            // data属性から「スケジュール名」と「日程」を取り出す
+            const targetName = selectedOption.getAttribute('data-name');
+            const targetDay = selectedOption.getAttribute('data-day');
+            
+            const timeSelect = document.getElementById('admin-time-select').value;
+            let finalMinutes = timeSelect;
+
+            if (timeSelect === 'custom') {
+                const customVal = document.getElementById('admin-custom-time').value.trim();
+                if (customVal === "") {
+                    alert("自由記述欄が空です。半角数字のみで分数を入力してください。");
+                    return;
+                }
+                finalMinutes = customVal + "分";
+            } else if (finalMinutes !== "0" && !finalMinutes.includes("分")) {
+                finalMinutes = finalMinutes; 
+            }
+
+            // ⚠️ 最終確認のワンクッションテキスト
+            let confirmMsg = "";
+            if (finalMinutes === "0") {
+                confirmMsg = `【確認】\n${targetDay}日目の「${targetName}」を通常進行（遅延なし）に戻す通知を送信します。よろしいですか？`;
+            } else {
+                confirmMsg = `【確認】\n${targetDay}日目の”${targetName}”、が”${finalMinutes}”遅れていることを通知する`;
+            }
+
+            if (!confirm(confirmMsg)) {
+                return; // キャンセルされたら処理中断
+            }
+
+            triggerDelayNotification(targetName, finalMinutes);
+        }
   
-        // 【発信側】管理者がボタンを押したら、Firebaseへデータを上書き保存（一斉自動化）
-        function triggerDelayNotification(minutes) {
-            const targetName = document.getElementById('admin-target-select').value;
+        function triggerDelayNotification(targetName, delayValue) {
             const broadcastPayload = { 
                 target: targetName, 
-                delay: minutes, 
+                delay: delayValue, 
                 timestamp: Date.now() 
             };
 
@@ -839,18 +987,19 @@
             })
             .then(response => {
                 if(response.ok) {
-                    alert(`【一斉配信成功】\n「${targetName}」の ${minutes}分遅延 を全員のスマホへ自動配信しました！`);
+                    alert(`【一斉配信成功】\n送信が完了しました！`);
+                    closeModal('modal-admin');
                 } else {
-                    alert("配信エラーが発生しました。FirebaseのURLを確認してください。");
+                    alert("配信エラーが発生しました。");
                 }
             })
             .catch(err => {
                 console.error(err);
-                alert("通信エラー：インターネットの接続状態を確認してください。");
+                alert("通信エラーが発生しました。");
             });
         }
   
-        // 【受信側】全員のスマホが、2秒に1回このデータベースを自動チェックしに走る
+        // 【受信側】自動チェック
         function syncCloudAndCheckAlert() {
             fetch(FIREBASE_DB_URL)
             .then(response => {
@@ -859,22 +1008,22 @@
             })
             .then(data => {
                 if (!data) return;
+                currentActiveServerDelay = data;
   
-                timelineData.forEach(slot => {
+                timeScheduleData.forEach(slot => {
                     if (slot.name === data.target) {
                         if (slot.delay !== data.delay) {
                             slot.delay = data.delay;
-                            renderTimeline();
+                            renderTimeSchedule();
                             
-                            const alertBar = document.getElementById('global-alert');
-                            document.getElementById('alert-message').innerText = data.delay > 0 ? `遅延発生: ${data.target} (${data.delay}分遅れ)` : "全ステージ通常通り";
-                            alertBar.style.display = 'flex';
+                            localStorage.removeItem('alert_bar_hidden_by_user');
+                            refreshGlobalAlertBarDisplay();
   
                             const lastSeenPopupKey = `popup_seen_${data.target}_${data.delay}_${data.timestamp}`;
                             if (!localStorage.getItem(lastSeenPopupKey)) {
-                                const msg = data.delay > 0 
-                                    ? `【進行変更】\n「${data.target}」に、現在【${data.delay}分】の遅れが発生しています！` 
-                                    : `【復旧連絡】\n遅延していた「${data.target}」は通常進行に戻りました。`;
+                                const msg = data.delay !== "0"
+                                    ? `【進行変更】\n${slot.day}日目 「${data.target}」に、現在【${data.delay}】の遅れが発生しています！` 
+                                    : `【復旧連絡】\n${slot.day}日目 「${data.target}」は通常進行に戻りました。`;
                                 
                                 document.getElementById('sync-alert-text').innerText = msg;
                                 document.getElementById('modal-sync-alert').classList.add('show');
@@ -883,14 +1032,44 @@
                         }
                     }
                 });
+
+                refreshGlobalAlertBarDisplay();
             })
             .catch(err => console.log("同期チェック中..."));
         }
-  
-        function initAdminSelect() {
-            document.getElementById('admin-target-select').innerHTML = timelineData.map(t => `<option value="${t.name}">${t.name}</option>`).join('');
+
+        function refreshGlobalAlertBarDisplay() {
+            if (!currentActiveServerDelay) return;
+            
+            const alertBar = document.getElementById('global-alert');
+            const toggleEnabled = document.getElementById('map-delay-toggle').checked;
+            const isUserHidden = localStorage.getItem('alert_bar_hidden_by_user') === 'true';
+            const hasDelay = currentActiveServerDelay.delay !== "0";
+
+            if (!toggleEnabled || isUserHidden || !hasDelay) {
+                alertBar.style.display = 'none';
+            } else {
+                // 表示用に関連するDay情報も探して付与
+                const targetSlot = timeScheduleData.find(s => s.name === currentActiveServerDelay.target);
+                const dayPrefix = targetSlot ? `${targetSlot.day}日目: ` : "";
+                
+                document.getElementById('alert-message').innerText = `遅延発生: ${dayPrefix}${currentActiveServerDelay.target} (${currentActiveServerDelay.delay}遅れ)`;
+                alertBar.style.display = 'flex';
+            }
         }
-        function closeAlertBar() { document.getElementById('global-alert').style.display = 'none'; }
+  
+        // 🛠️ 管理パネルの選択肢。1日目と2日目が絶対に一目で分かる形にします！
+        function initAdminSelect() {
+            document.getElementById('admin-target-select').innerHTML = timeScheduleData.map(t => 
+                `<option value="${t.name}" data-name="${t.name}" data-day="${t.day}">【${t.day}日目】${t.name} (${t.time})</option>`
+            ).join('');
+        }
+
+        function closeAlertBar() { 
+            localStorage.setItem('alert_bar_hidden_by_user', 'true');
+            document.getElementById('global-alert').style.display = 'none'; 
+        }
+
         function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); document.getElementById('menu-overlay').classList.toggle('show'); }
         function openModal(id) { toggleSidebar(); document.getElementById(id).classList.add('show'); }
         function closeModal(id) { document.getElementById(id).classList.remove('show'); }
@@ -912,24 +1091,17 @@
 
             notifyBtn.addEventListener('click', () => {
                 if (!('Notification' in window)) {
-                    alert('お使いのブラウザや環境は通知機能に対応していません。※iPhoneの場合は「ホーム画面に追加」してから開いてください。');
+                    alert('お使いのブラウザや環境は通知機能に対応していません。');
                     return;
                 }
   
                 if (Notification.permission === 'denied') {
-                    alert(
-                        '【通知のブロックを解除する方法】\n\n' +
-                        '現在、ブラウザの設定で通知が「ブロック」されています。以下の手順で簡単に解除できます！\n\n' +
-                        '① 画面の一番上、URLの左側にある「鍵マーク（または設定マーク）」をタップします。\n' +
-                        '②「権限」または「サイトの設定」を開きます。\n' +
-                        '③「通知」を【許可（オン）】に切り替えてください。\n\n' +
-                        '設定を変えたあと、画面をもう一度読み込む（リロードする）と通知が届くようになります！'
-                    );
+                    alert('URLの左側にある鍵マークから通知設定を【許可】に変更してください。');
                     return;
                 }
 
                 if (Notification.permission === 'granted') {
-                    alert('通知はすでに許可されています！ステージの遅延情報をお待ちください。');
+                    alert('通知はすでに許可されています！');
                     closeModal('modal-push');
                     return;
                 }
@@ -942,17 +1114,11 @@
                         notifyBtn.innerText = '✅ 通知許可済み';
                         notifyBtn.style.background = '#28a745';
                         closeModal('modal-push'); 
-                    } else if (permission === 'denied') {
-                        alert('通知がブロックされました。ブラウザのURLの横の設定マークから変更が可能です。');
-                        notifyBtn.innerText = '❌ ブロック中';
-                        notifyBtn.style.background = '#dc3545';
                     } else {
-                        alert('通知設定が保留されました。再度お試しください。');
                         notifyBtn.innerText = '通知システムを変更する';
                     }
                 }).catch((error) => {
-                    console.error('通知要求エラー:', error);
-                    alert('通知のリクエスト中にエラーが発生しました。HTTPS通信であることを確認してください。');
+                    console.error(error);
                     notifyBtn.innerText = '通知システムを変更する';
                 });
             });
